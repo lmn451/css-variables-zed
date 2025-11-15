@@ -1,0 +1,41 @@
+schema_version = 1
+id = "dev.applesucks.css-variables"
+name = "CSS Variables (LSP)"
+version = "0.0.1"
+authors = ["applesucks"]
+description = "Project-wide CSS variable autocomplete, hover, go-to-definition and color support via css-variables-language-server."
+repository = "https://github.com/applesucks/zed-css-variables"
+
+[language_servers.css_variables]
+name = "CSS Variables Language Server"
+
+languages = [
+  "CSS",
+  "SCSS",
+  "Sass",
+  "Less",
+  "HTML",
+  "JavaScript",
+  "JSX",
+  "TypeScript",
+  "TSX",
+  "Svelte",
+  "Vue",
+  "Astro",
+  "PostCSS"
+]
+
+[language_servers.css_variables.language_ids]
+CSS = "css"
+SCSS = "scss"
+Sass = "sass"
+Less = "less"
+HTML = "html"
+JavaScript = "javascript"
+JSX = "javascriptreact"
+TypeScript = "typescript"
+TSX = "typescriptreact"
+Svelte = "svelte"
+Vue = "vue"
+Astro = "astro"
+PostCSS = "postcss"
