@@ -18,6 +18,36 @@ impl zed::Extension for CssVariablesExtension {
 
         build_css_variables_command(worktree)
     }
+
+    fn language_server_workspace_configuration(
+        &mut self,
+        _language_server_id: &zed::LanguageServerId,
+        _worktree: &zed::Worktree,
+    ) -> zed::Result<Option<zed::serde_json::Value>> {
+        // Return default settings matching css-variables-language-server's defaultSettings.
+        // We nest them under the `cssVariables` key because the server calls
+        // `connection.workspace.getConfiguration('cssVariables')`, and Zed's
+        // bridge likely indexes into this object by that key.
+        Ok(Some(zed::serde_json::json!({
+            "cssVariables": {
+                "lookupFiles": ["**/*.less", "**/*.scss", "**/*.sass", "**/*.css"],
+                "blacklistFolders": [
+                    "**/.cache",
+                    "**/.DS_Store",
+                    "**/.git",
+                    "**/.hg",
+                    "**/.next",
+                    "**/.svn",
+                    "**/bower_components",
+                    "**/CVS",
+                    "**/dist",
+                    "**/node_modules",
+                    "**/tests",
+                    "**/tmp",
+                ],
+            }
+        })))
+    }
 }
 
 fn build_css_variables_command(worktree: &zed::Worktree) -> zed::Result<zed::Command> {
@@ -49,9 +79,17 @@ fn build_css_variables_command(worktree: &zed::Worktree) -> zed::Result<zed::Com
         ));
     }
 
+    // Wrap the server in a shell so we can capture stderr into a log file without
+    // polluting the LSP stdout stream.
+    let shell = "/bin/sh".to_string();
+    let wrapped = format!(
+        "\"{}\" --stdio 2>>\"/tmp/css-variables-lsp.log\"",
+        server_path
+    );
+
     Ok(zed::Command {
-        command: server_path,
-        args: vec!["--stdio".to_string()],
+        command: shell,
+        args: vec!["-lc".to_string(), wrapped],
         env,
     })
 }
