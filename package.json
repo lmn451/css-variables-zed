@@ -1,7 +1,7 @@
 {
   "name": "zed-css-variables",
   "version": "0.0.3",
-  "description": "Project-wide CSS custom properties (variables) support for Zed, powered by css-variables-language-server.",
+  "description": "Project-wide CSS custom properties (variables) support for Zed, powered by css-variable-lsp.",
   "main": "index.js",
   "scripts": {},
   "repository": {

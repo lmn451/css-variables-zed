@@ -52,7 +52,7 @@ impl zed::Extension for CssVariablesExtension {
 
 fn build_css_variables_command(worktree: &zed::Worktree) -> zed::Result<zed::Command> {
     let package = "css-variable-lsp";
-    let version = "1.0.0";
+    let version = "1.0.2";
 
     // Install the package if it's missing or on a different version.
     match zed::npm_package_installed_version(package)? {
@@ -66,16 +66,27 @@ fn build_css_variables_command(worktree: &zed::Worktree) -> zed::Result<zed::Com
 
     let node = zed::node_binary_path()?;
 
-        let env = worktree.shell_env();
-        return Ok(zed::Command {
-            command: node,
-            args: vec![
-            "node_modules/css-variable-lsp/server/out/server/src/server.js".to_string(),
-                "--stdio".to_string(),
-            ],
-            env,
-        });
+    // Get the extension's working directory and construct path to bin
+    let current_dir = std::env::current_dir()
+        .map_err(|e| format!("Could not get current directory: {}", e))?;
+    let bin_path = current_dir.join("node_modules/.bin/css-variable-lsp");
 
+    if !bin_path.exists() {
+        return Err(format!(
+            "Language server bin does not exist: {:?} (current_dir: {:?})",
+            bin_path, current_dir
+        ));
+    }
+
+    let env = worktree.shell_env();
+    Ok(zed::Command {
+        command: node,
+        args: vec![
+            bin_path.to_string_lossy().to_string(),
+            "--stdio".to_string(),
+        ],
+        env,
+    })
 }
 
 zed::register_extension!(CssVariablesExtension);

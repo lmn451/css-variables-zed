@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.3
+
+- **Breaking Change**: Switched from `css-variables-language-server` to `css-variable-lsp` (v1.0.2)
+- Fixed path resolution issue that caused "Cannot find module" errors
+- Extension now properly uses the npm bin entry via `current_dir()` to locate the language server
+- Updated package references in documentation
+
 ## 0.0.2
+
 
 - Integrates the existing `css-variables-language-server` from the VS Code extension:
   - Indexes CSS custom properties from `*.css`, `*.scss`, `*.sass`, `*.less`.
