@@ -2,7 +2,7 @@
 name = "zed_css_variables"
 version = "0.0.1"
 edition = "2021"
-license = "MIT"
+license = "GPL-3.0"
 
 [lib]
 crate-type = ["cdylib"]

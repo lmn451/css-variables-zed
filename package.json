@@ -15,7 +15,7 @@
     "lsp"
   ],
   "author": "lmn451",
-  "license": "MIT",
+  "license": "GPL-3.0",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/lmn451/css-variables-zed/issues"
