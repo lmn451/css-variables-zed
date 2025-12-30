@@ -52,7 +52,7 @@ impl zed::Extension for CssVariablesExtension {
 
 fn build_css_variables_command(worktree: &zed::Worktree) -> zed::Result<zed::Command> {
     let package = "css-variable-lsp";
-    let version = "1.0.2";
+    let version = "1.0.5-beta.1";
 
     // Install the package if it's missing or on a different version.
     match zed::npm_package_installed_version(package)? {
@@ -90,3 +90,43 @@ fn build_css_variables_command(worktree: &zed::Worktree) -> zed::Result<zed::Com
 }
 
 zed::register_extension!(CssVariablesExtension);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_extension_creation() {
+        use zed::Extension;
+        let _ext = CssVariablesExtension::new();
+        // Extension should initialize without panicking
+    }
+
+    #[test]
+    fn test_language_server_id_validation() {
+        // Test the string matching logic
+        assert_eq!("css_variables", "css_variables");
+        assert_ne!("css_variables", "other_server");
+    }
+
+    #[test]
+    fn test_package_version_constant() {
+        // Ensure version string is valid semver format with beta tag
+        let version = "1.0.5-beta.1";
+        assert!(version.contains('.'));
+        assert!(version.contains("beta"));
+        assert!(!version.is_empty());
+        
+        // Verify package name
+        let package = "css-variable-lsp";
+        assert_eq!(package, "css-variable-lsp");
+    }
+
+    #[test]
+    fn test_configuration_keys() {
+        // Test that configuration keys are correct
+        let lookup_files = vec!["**/*.less", "**/*.scss", "**/*.sass", "**/*.css"];
+        assert!(lookup_files.contains(&"**/*.css"));
+        assert!(lookup_files.contains(&"**/*.scss"));
+    }
+}

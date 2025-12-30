@@ -1,0 +1,49 @@
+name: Test Extension
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-wasip1
+    
+    - name: Cache Cargo
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Run Rust tests
+      run: cargo test --lib
+    
+    - name: Build WASM
+      run: cargo build --release --target wasm32-wasip1
+    
+    - name: Run integration tests
+      run: ./test_extension.sh
+    
+    - name: Verify extension structure
+      run: |
+        test -f extension.toml
+        test -f extension.wasm
+        grep -q "0.0.4" extension.toml
+        grep -q "css-variable-lsp" extension.toml

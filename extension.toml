@@ -1,10 +1,14 @@
 schema_version = 1
 id = "css-variables"
 name = "CSS Variables (LSP)"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["lm451"]
 description = "Project-wide CSS variable autocomplete, hover, go-to-definition and color support via css-variable-lsp."
 repository = "https://github.com/lmn451/css-variables-zed"
+
+[[capabilities]]
+kind = "npm:install"
+package = "css-variable-lsp"
 
 [language_servers.css_variables]
 name = "CSS Variables Language Server"

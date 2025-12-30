@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.4
+
+- Updated to `css-variable-lsp` v1.0.5-beta.1
+- Added `npm:install` capability declaration in `extension.toml` for proper package installation
+- Extension now automatically installs dependencies on fresh Zed installations
+- No manual Node.js or npm setup required
+
 ## 0.0.3
 
 - **Breaking Change**: Switched from `css-variables-language-server` to `css-variable-lsp` (v1.0.2)

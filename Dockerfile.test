@@ -1,0 +1,65 @@
+# Test Dockerfile for zed-css-variables extension
+# This creates a clean environment to test extension installation
+
+FROM ubuntu:22.04
+
+# Avoid interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    wget \
+    xz-utils \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Add wasm32-wasip1 target
+RUN rustup target add wasm32-wasip1
+
+# Create working directory
+WORKDIR /workspace
+
+# Copy extension files
+COPY . .
+
+# Build the extension
+RUN cargo build --release --target wasm32-wasip1 && \
+    cp target/wasm32-wasip1/release/zed_css_variables.wasm extension.wasm
+
+# Verify the build
+RUN test -f extension.wasm && \
+    test -f extension.toml && \
+    echo "✅ Extension files present"
+
+# Run tests
+RUN cargo test --lib
+
+# Run integration tests
+RUN chmod +x test_extension.sh && ./test_extension.sh
+
+# Simulate Zed extension directory structure
+RUN mkdir -p /root/.local/share/zed/extensions/installed/css-variables && \
+    cp extension.toml extension.wasm /root/.local/share/zed/extensions/installed/css-variables/
+
+# Create a test that simulates npm package installation
+RUN cd /root/.local/share/zed/extensions/installed/css-variables && \
+    echo "Simulating npm install..." && \
+    mkdir -p node_modules/.bin
+
+# Final validation
+CMD ["bash", "-c", "echo '🧪 Extension test environment ready' && \
+     echo '📁 Extension location: /root/.local/share/zed/extensions/installed/css-variables' && \
+     ls -lh /root/.local/share/zed/extensions/installed/css-variables/ && \
+     echo '' && \
+     echo '✅ All tests passed in clean environment' && \
+     echo '⚠️  Note: Full Zed LSP testing requires Zed editor (GUI application)' && \
+     echo '   This test validates: build, structure, and extension readiness'"]
