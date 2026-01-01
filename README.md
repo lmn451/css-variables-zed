@@ -52,9 +52,6 @@ cargo test --lib
 
 # Run clean installation test (validates npm package installation)
 ./test_clean_install.sh
-
-# Run full Docker-based test (requires Docker)
-./docker-test-full.sh
 ```
 
 ### Installing Dev Extension
