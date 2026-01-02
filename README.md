@@ -1,14 +1,15 @@
 # CSS Variables (LSP) for Zed
 
-Project-wide CSS custom properties (variables) support for Zed, powered by [`css-variable-lsp`](https://github.com/vunguyentuan/vscode-css-variables).
+Project-wide CSS custom properties (variables) support for Zed, powered by `css-variable-lsp`.
 
 ## Features
 
-- 🎨 Project-wide indexing of `--var`s defined in `.css`, `.scss`, `.sass`, `.less`
-- ✨ Autocomplete and color previews for `var(--...)`
-- 🔍 Hover and go to definition for CSS variables
-- 🚀 Works across HTML / JS / TS / Svelte / Vue etc. where `var(--...)` is used
-- 🔧 Zero configuration required - works out of the box!
+- Workspace indexing of CSS variables across `.css`, `.scss`, `.sass`, `.less`, and HTML `<style>` blocks / inline styles.
+- Context-aware completion for `var(--...)` and CSS property values.
+- Hover that shows cascade-ordered definitions (`!important`, specificity, source order).
+- Go to definition and find references for CSS variables.
+- Color decorations on `var(--...)` usages (the extension runs the LSP with `--color-only-variables`).
+- Works in CSS, SCSS, Sass, Less, HTML, JavaScript/TypeScript (JSX/TSX), Svelte, Vue, Astro, and PostCSS.
 
 ## Installation
 
@@ -17,10 +18,7 @@ Project-wide CSS custom properties (variables) support for Zed, powered by [`css
 3. Search for "CSS Variables"
 4. Click Install
 
-**That's it!** No Node.js or npm installation required. The extension automatically:
-- Uses Zed's built-in Node.js runtime
-- Installs `css-variable-lsp@1.0.5-beta.1` on first use
-- Manages all dependencies automatically
+On first use, the extension installs `css-variable-lsp@1.0.7` via Zed's `npm:install` capability using Zed's built-in Node.js runtime. No manual Node.js or npm setup is required.
 
 ## Development
 
@@ -41,8 +39,6 @@ cp target/wasm32-wasip1/release/zed_css_variables.wasm extension.wasm
 
 ### Testing
 
-The extension includes comprehensive automated tests:
-
 ```bash
 # Run Rust unit tests
 cargo test --lib
@@ -57,22 +53,16 @@ cargo test --lib
 ### Installing Dev Extension
 
 1. Build the extension (see above)
-2. Open Zed → Extensions → Install Dev Extension
+2. Open Zed -> Extensions -> Install Dev Extension
 3. Select this directory
 
 ## Known Limitations
 
-- Only CSS/SCSS/LESS/SASS files are scanned; variables defined inside HTML `<style>` blocks are not indexed (this matches upstream behaviour)
-- If a variable is defined in multiple files, the last scanned definition wins
-
-## Version History
-
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
+- Cascade resolution is best-effort; the LSP does not model DOM nesting or selector combinators.
+- Rename operations replace full declarations/usages and may adjust formatting.
 
 ### Latest: v0.0.4
 
-- Updated to `css-variable-lsp` v1.0.5-beta.1
-- Added `npm:install` capability for proper package management
-- Automated dependency installation
-- Comprehensive test suite added
-- Zero manual setup required
+- Pins `css-variable-lsp` to v1.0.7
+- Uses `npm:install` for automatic dependency setup
+- Runs the server with `--color-only-variables` by default
