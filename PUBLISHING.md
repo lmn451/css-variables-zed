@@ -4,7 +4,6 @@
 
 ✅ **Version Updated**
 - [x] `extension.toml` version: 0.0.4
-- [x] `package.json` version: 0.0.4
 - [x] CHANGELOG.md updated with release notes
 
 ✅ **Code Quality**
@@ -25,7 +24,7 @@
 
 ✅ **Extension Configuration**
 - [x] `npm:install` capability declared
-- [x] LSP version: css-variable-lsp@1.0.5-beta.1
+- [x] LSP version: css-variable-lsp@1.0.7
 - [x] Extension metadata complete (name, description, repository)
 - [x] License specified (GPL-3.0)
 
@@ -72,7 +71,7 @@ Users can install directly from the repository:
 
 When releasing a new version:
 
-1. Update version in `extension.toml` and `package.json`
+1. Update version in `extension.toml`
 2. Update CHANGELOG.md
 3. Run all tests
 4. Build and update `extension.wasm`
