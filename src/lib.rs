@@ -80,8 +80,8 @@ impl zed::Extension for CssVariablesExtension {
 }
 
 fn merge_json_value(base: &mut Value, overlay: &Value) {
-    match (base, overlay) {
-        (Value::Object(base_map), Value::Object(overlay_map)) => {
+    if let Value::Object(overlay_map) = overlay {
+        if let Value::Object(base_map) = base {
             for (key, overlay_value) in overlay_map {
                 match base_map.get_mut(key) {
                     Some(base_value) => merge_json_value(base_value, overlay_value),
@@ -90,11 +90,11 @@ fn merge_json_value(base: &mut Value, overlay: &Value) {
                     }
                 }
             }
-        }
-        _ => {
-            *base = overlay.clone();
+            return;
         }
     }
+
+    *base = overlay.clone();
 }
 
 fn build_css_variables_command(worktree: &zed::Worktree) -> zed::Result<zed::Command> {
