@@ -20,6 +20,27 @@ Project-wide CSS custom properties (variables) support for Zed, powered by `css-
 
 On first use, the extension installs `css-variable-lsp@1.0.7` via Zed's `npm:install` capability using Zed's built-in Node.js runtime. No manual Node.js or npm setup is required.
 
+## Configuration
+
+You can override the lookup globs and folder blacklist via Zed settings:
+
+```json
+{
+  "lsp": {
+    "css_variables": {
+      "settings": {
+        "cssVariables": {
+          "lookupFiles": ["**/*.css", "**/*.scss", "**/*.vue"],
+          "blacklistFolders": ["**/dist", "**/node_modules"]
+        }
+      }
+    }
+  }
+}
+```
+
+For convenience, you can also place `lookupFiles` and `blacklistFolders` at the top level of `settings` and the extension will nest them under `cssVariables`.
+
 ## Development
 
 ### Prerequisites

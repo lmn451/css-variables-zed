@@ -1,4 +1,6 @@
 use zed_extension_api as zed;
+use zed::settings::LspSettings;
+use zed::serde_json::Value;
 
 struct CssVariablesExtension;
 
@@ -22,15 +24,25 @@ impl zed::Extension for CssVariablesExtension {
     fn language_server_workspace_configuration(
         &mut self,
         _language_server_id: &zed::LanguageServerId,
-        _worktree: &zed::Worktree,
+        worktree: &zed::Worktree,
     ) -> zed::Result<Option<zed::serde_json::Value>> {
         // Return default settings matching css-variables-language-server's defaultSettings.
         // We nest them under the `cssVariables` key because the server calls
         // `connection.workspace.getConfiguration('cssVariables')`, and Zed's
         // bridge likely indexes into this object by that key.
-        Ok(Some(zed::serde_json::json!({
+        let mut settings = zed::serde_json::json!({
             "cssVariables": {
-                "lookupFiles": ["**/*.less", "**/*.scss", "**/*.sass", "**/*.css"],
+                "lookupFiles": [
+                    "**/*.less",
+                    "**/*.scss",
+                    "**/*.sass",
+                    "**/*.css",
+                    "**/*.html",
+                    "**/*.vue",
+                    "**/*.svelte",
+                    "**/*.astro",
+                    "**/*.ripple"
+                ],
                 "blacklistFolders": [
                     "**/.cache",
                     "**/.DS_Store",
@@ -46,7 +58,42 @@ impl zed::Extension for CssVariablesExtension {
                     "**/tmp",
                 ],
             }
-        })))
+        });
+
+        if let Ok(lsp_settings) = LspSettings::for_worktree("css_variables", worktree) {
+            if let Some(user_settings) = lsp_settings.settings {
+                let mut merged = user_settings;
+
+                let needs_wrap = merged.get("cssVariables").is_none()
+                    && (merged.get("lookupFiles").is_some()
+                        || merged.get("blacklistFolders").is_some());
+                if needs_wrap {
+                    merged = zed::serde_json::json!({ "cssVariables": merged });
+                }
+
+                merge_json_value(&mut settings, &merged);
+            }
+        }
+
+        Ok(Some(settings))
+    }
+}
+
+fn merge_json_value(base: &mut Value, overlay: &Value) {
+    match (base, overlay) {
+        (Value::Object(base_map), Value::Object(overlay_map)) => {
+            for (key, overlay_value) in overlay_map {
+                match base_map.get_mut(key) {
+                    Some(base_value) => merge_json_value(base_value, overlay_value),
+                    None => {
+                        base_map.insert(key.clone(), overlay_value.clone());
+                    }
+                }
+            }
+        }
+        _ => {
+            *base = overlay.clone();
+        }
     }
 }
 
