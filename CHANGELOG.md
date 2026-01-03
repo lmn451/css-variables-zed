@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.5
+
+- Documentation and release metadata updated for v0.0.5
+
 ## 0.0.4
 
 - Updated to `css-variable-lsp` v1.0.5-beta.1

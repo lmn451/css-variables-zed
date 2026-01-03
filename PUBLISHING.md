@@ -3,7 +3,7 @@
 ## Pre-Publishing Checklist
 
 ✅ **Version Updated**
-- [x] `extension.toml` version: 0.0.4
+- [x] `extension.toml` version: 0.0.5
 - [x] CHANGELOG.md updated with release notes
 
 ✅ **Code Quality**
@@ -79,7 +79,7 @@ When releasing a new version:
 6. Push to GitHub
 7. Create a git tag: `git tag v0.0.X && git push origin v0.0.X`
 
-## Release Checklist for v0.0.4
+## Release Checklist for v0.0.5
 
 - [x] Updated to css-variable-lsp@1.0.5-beta.1
 - [x] Added npm:install capability
@@ -88,7 +88,7 @@ When releasing a new version:
 - [x] All tests passing
 - [x] Code committed
 - [ ] Code pushed to GitHub
-- [ ] Create git tag v0.0.4
+- [ ] Create git tag v0.0.5
 - [ ] Submit to Zed extension marketplace
 
 ## Contact & Support

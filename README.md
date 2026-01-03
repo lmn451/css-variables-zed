@@ -170,7 +170,7 @@ cargo test --lib
 - Cascade resolution is best-effort; the LSP does not model DOM nesting or selector combinators.
 - Rename operations replace full declarations/usages and may adjust formatting.
 
-### Latest: v0.0.4
+### Latest: v0.0.5
 
 - Pins `css-variable-lsp` to v1.0.8-beta.1
 - Uses `npm:install` for automatic dependency setup
