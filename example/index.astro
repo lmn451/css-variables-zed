@@ -1,0 +1,20 @@
+---
+const title = "Astro example";
+---
+
+<style>
+:root {
+  --astro-color: #16a34a;
+  --astro-bg: #dcfce7;
+}
+
+.card {
+  padding: 1rem;
+  color: var(--astro-color);
+  background: var(--astro-bg);
+}
+</style>
+
+<div class="card" style="border: 1px solid var(--astro-color);">
+  {title}
+</div>

@@ -1,0 +1,17 @@
+export component App() {
+  <div class="container" style="color: var(--ripple-color); background: var(--ripple-bg);">
+    Ripple example
+  </div>
+
+  <style>
+    :root {
+      --ripple-color: #7c3aed;
+      --ripple-bg: #ede9fe;
+    }
+
+    .container {
+      padding: 1rem;
+      border: 1px solid var(--ripple-color);
+    }
+  </style>
+}
