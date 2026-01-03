@@ -2,9 +2,10 @@ name: Test Extension
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -15,6 +16,11 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
     
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -40,6 +46,9 @@ jobs:
     
     - name: Run integration tests
       run: ./test_extension.sh
+
+    - name: Run clean install test
+      run: ./test_clean_install.sh
     
     - name: Verify extension structure
       run: |
