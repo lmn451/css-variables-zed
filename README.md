@@ -42,6 +42,7 @@ the Settings JSON (Cmd+, then "Open Settings JSON") or a workspace
 ```
 
 Settings must be nested under the `cssVariables` key.
+Provided lists replace the defaults (include any defaults you still want).
 
 Defaults:
 
@@ -81,6 +82,8 @@ Supported LSP flags:
 - `--color-only-variables`
 - `--lookup-files "<glob>,<glob>"`
 - `--lookup-file "<glob>"` (repeatable)
+- `--ignore-globs "<glob>,<glob>"`
+- `--ignore-glob "<glob>"` (repeatable)
 - `--path-display=relative|absolute|abbreviated`
 - `--path-display-length=N`
 
@@ -88,6 +91,7 @@ Supported environment variables:
 
 - `CSS_LSP_COLOR_ONLY_VARIABLES=1`
 - `CSS_LSP_LOOKUP_FILES` (comma-separated globs)
+- `CSS_LSP_IGNORE_GLOBS` (comma-separated globs)
 - `CSS_LSP_DEBUG=1`
 - `CSS_LSP_PATH_DISPLAY=relative|absolute|abbreviated`
 - `CSS_LSP_PATH_DISPLAY_LENGTH=1`
@@ -112,7 +116,8 @@ Defaults:
   - `**/out/**`
   - `**/.git/**`
 
-Note: Passing additional flags to the LSP from Zed requires a custom wrapper or environment configuration.
+Zed forwards `cssVariables.lookupFiles` as repeated `--lookup-file` flags and
+`cssVariables.blacklistFolders` as repeated `--ignore-glob` flags.
 
 ### Completion Path Examples
 
