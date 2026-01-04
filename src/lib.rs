@@ -18,7 +18,11 @@ impl zed::Extension for CssVariablesExtension {
             return Err(format!("Unknown language server id: {language_server_id}"));
         }
 
-        build_css_variables_command(worktree)
+        let user_settings = LspSettings::for_worktree("css_variables", worktree)
+            .ok()
+            .and_then(|lsp_settings| lsp_settings.settings);
+
+        build_css_variables_command(worktree, user_settings)
     }
 
     fn language_server_workspace_configuration(
@@ -96,7 +100,10 @@ fn merge_json_value(base: &mut Value, overlay: &Value) {
     *base = overlay.clone();
 }
 
-fn build_css_variables_command(worktree: &zed::Worktree) -> zed::Result<zed::Command> {
+fn build_css_variables_command(
+    worktree: &zed::Worktree,
+    user_settings: Option<Value>,
+) -> zed::Result<zed::Command> {
     let package = "css-variable-lsp";
     let version = "1.0.8";
 
@@ -125,15 +132,64 @@ fn build_css_variables_command(worktree: &zed::Worktree) -> zed::Result<zed::Com
     }
 
     let env = worktree.shell_env();
+    let mut args = vec![bin_path.to_string_lossy().to_string()];
+    args.extend(build_css_variables_args(user_settings));
+
     Ok(zed::Command {
         command: node,
-        args: vec![
-            bin_path.to_string_lossy().to_string(),
-            "--color-only-variables".to_string(),
-            "--stdio".to_string(),
-        ],
+        args,
         env,
     })
+}
+
+fn build_css_variables_args(user_settings: Option<Value>) -> Vec<String> {
+    let mut args = vec![
+        "--color-only-variables".to_string(),
+        "--stdio".to_string(),
+    ];
+
+    args.extend(build_settings_args(user_settings));
+    args
+}
+
+fn build_settings_args(user_settings: Option<Value>) -> Vec<String> {
+    let mut args = Vec::new();
+
+    let css_variables = user_settings
+        .as_ref()
+        .and_then(|settings| settings.get("cssVariables"));
+
+    let lookup_files = css_variables
+        .and_then(|settings| settings.get("lookupFiles"))
+        .map(extract_string_array)
+        .unwrap_or_default();
+
+    let blacklist_folders = css_variables
+        .and_then(|settings| settings.get("blacklistFolders"))
+        .map(extract_string_array)
+        .unwrap_or_default();
+
+    for glob in lookup_files {
+        args.push("--lookup-file".to_string());
+        args.push(glob);
+    }
+
+    for glob in blacklist_folders {
+        args.push("--ignore-glob".to_string());
+        args.push(glob);
+    }
+
+    args
+}
+
+fn extract_string_array(value: &Value) -> Vec<String> {
+    match value {
+        Value::Array(items) => items
+            .iter()
+            .filter_map(|item| item.as_str().map(|value| value.to_string()))
+            .collect(),
+        _ => Vec::new(),
+    }
 }
 
 zed::register_extension!(CssVariablesExtension);
@@ -189,5 +245,45 @@ mod tests {
 
         assert_eq!(settings["cssVariables"]["lookupFiles"], json!(["**/*.vue"]));
         assert!(settings["cssVariables"]["blacklistFolders"].is_array());
+    }
+
+    #[test]
+    fn builds_cli_args_from_settings() {
+        let user_settings = json!({
+            "cssVariables": {
+                "lookupFiles": ["a.css", "b.css"],
+                "blacklistFolders": ["**/dist/**"]
+            }
+        });
+
+        let args = build_css_variables_args(Some(user_settings));
+
+        assert_eq!(
+            args,
+            vec![
+                "--color-only-variables",
+                "--stdio",
+                "--lookup-file",
+                "a.css",
+                "--lookup-file",
+                "b.css",
+                "--ignore-glob",
+                "**/dist/**",
+            ]
+        );
+    }
+
+    #[test]
+    fn ignores_non_array_settings_for_cli_args() {
+        let user_settings = json!({
+            "cssVariables": {
+                "lookupFiles": "a.css",
+                "blacklistFolders": 42
+            }
+        });
+
+        let args = build_css_variables_args(Some(user_settings));
+
+        assert_eq!(args, vec!["--color-only-variables", "--stdio"]);
     }
 }
