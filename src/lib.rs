@@ -105,7 +105,7 @@ fn build_css_variables_command(
     user_settings: Option<Value>,
 ) -> zed::Result<zed::Command> {
     let package = "css-variable-lsp";
-    let version = "1.0.8";
+    let version = "1.0.9";
 
     // Install the package if it's missing or on a different version.
     match zed::npm_package_installed_version(package)? {

@@ -63,7 +63,7 @@ echo -e "${GREEN}✓ WASM file valid (${WASM_SIZE} bytes)${NC}"
 
 # Test 4: Check Rust source for correct version
 echo -e "\n${YELLOW}Test 4: Verifying LSP version in source...${NC}"
-if ! grep -q 'let version = "1.0.8"' src/lib.rs; then
+if ! grep -q 'let version = "1.0.9"' src/lib.rs; then
     echo -e "${RED}❌ LSP version mismatch in src/lib.rs${NC}"
     exit 1
 fi

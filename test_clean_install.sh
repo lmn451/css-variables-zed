@@ -28,11 +28,11 @@ if [ ! -f "extension.toml" ] || [ ! -f "extension.wasm" ]; then
 fi
 echo -e "${GREEN}✓ Extension structure valid${NC}\n"
 
-echo -e "${YELLOW}Step 3: Testing npm package installation (css-variable-lsp@1.0.8)...${NC}"
+echo -e "${YELLOW}Step 3: Testing npm package installation (css-variable-lsp@1.0.9)...${NC}"
 if command -v npm >/dev/null 2>&1; then
     # Create package.json to avoid npm installing in parent directory
     echo '{"name":"test","version":"1.0.0"}' > package.json
-    npm install css-variable-lsp@1.0.8 --no-save 2>&1 | tail -5
+    npm install css-variable-lsp@1.0.9 --no-save 2>&1 | tail -5
     
     # The binary path is a symlink to the actual server.js file
     if [ -L "node_modules/.bin/css-variable-lsp" ] || [ -f "node_modules/.bin/css-variable-lsp" ]; then
@@ -84,6 +84,6 @@ echo -e "${GREEN}========================================${NC}\n"
 
 echo -e "This test confirms:"
 echo -e "  ✓ Extension files are properly structured"
-echo -e "  ✓ npm package css-variable-lsp@1.0.8 is installable"
+echo -e "  ✓ npm package css-variable-lsp@1.0.9 is installable"
 echo -e "  ✓ LSP binary is accessible and executable"
 echo -e "  ✓ Extension will work on fresh Zed installations"
