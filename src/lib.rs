@@ -119,20 +119,25 @@ fn build_css_variables_command(
 
     let node = zed::node_binary_path()?;
 
-    // Get the extension's working directory and construct path to bin
+    // Use JS entrypoint directly to avoid npm .bin shell shim issues on Windows.
+    // Get the extension's working directory and construct path to entrypoint
     let current_dir = std::env::current_dir()
         .map_err(|e| format!("Could not get current directory: {}", e))?;
-    let bin_path = current_dir.join("node_modules/.bin/css-variable-lsp");
+    let entrypoint_path = current_dir
+        .join("node_modules")
+        .join(package)
+        .join("out")
+        .join("server.js");
 
-    if !bin_path.exists() {
+    if !entrypoint_path.exists() {
         return Err(format!(
-            "Language server bin does not exist: {:?} (current_dir: {:?})",
-            bin_path, current_dir
+            "Language server entrypoint does not exist: {:?} (current_dir: {:?})",
+            entrypoint_path, current_dir
         ));
     }
 
     let env = worktree.shell_env();
-    let mut args = vec![bin_path.to_string_lossy().to_string()];
+    let mut args = vec![entrypoint_path.to_string_lossy().to_string()];
     args.extend(build_css_variables_args(user_settings));
 
     Ok(zed::Command {
