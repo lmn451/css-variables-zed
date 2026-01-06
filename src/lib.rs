@@ -294,4 +294,15 @@ mod tests {
 
         assert_eq!(args, vec!["--color-only-variables", "--stdio"]);
     }
+
+    #[test]
+    fn default_blacklist_globs_include_directory_contents() {
+        let settings = build_workspace_settings(None);
+        let blacklist = settings["cssVariables"]["blacklistFolders"]
+            .as_array()
+            .expect("blacklistFolders should be an array");
+
+        assert!(blacklist.contains(&json!("**/node_modules/**")));
+        assert!(blacklist.contains(&json!("**/dist/**")));
+    }
 }
