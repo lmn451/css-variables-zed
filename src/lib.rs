@@ -138,7 +138,7 @@ fn build_css_variables_command(
 
     let env = worktree.shell_env();
     let mut args = vec![entrypoint_path.to_string_lossy().to_string()];
-    
+
     // Build merged settings with defaults so CLI args include defaults when user has no custom settings
     let merged_settings = build_workspace_settings(user_settings);
     args.extend(build_css_variables_args(Some(merged_settings)));
@@ -296,13 +296,12 @@ mod tests {
     }
 
     #[test]
-    fn default_blacklist_globs_include_directory_contents() {
+    fn default_blacklist_globs_are_passed_to_cli_args() {
         let settings = build_workspace_settings(None);
-        let blacklist = settings["cssVariables"]["blacklistFolders"]
-            .as_array()
-            .expect("blacklistFolders should be an array");
+        let args = build_css_variables_args(Some(settings));
 
-        assert!(blacklist.contains(&json!("**/node_modules/**")));
-        assert!(blacklist.contains(&json!("**/dist/**")));
+        assert!(args.contains(&"--ignore-glob".to_string()));
+        assert!(args.contains(&"**/node_modules/**".to_string()));
+        assert!(args.contains(&"**/dist/**".to_string()));
     }
 }
