@@ -33,7 +33,7 @@ the Settings JSON (Cmd+, then "Open Settings JSON") or a workspace
       "settings": {
         "cssVariables": {
           "lookupFiles": ["**/*.css", "**/*.scss", "**/*.vue"],
-          "blacklistFolders": ["**/dist", "**/node_modules"]
+          "blacklistFolders": ["**/dist/**", "**/node_modules/**"]
         }
       }
     }
@@ -57,20 +57,22 @@ Defaults:
   - `**/*.astro`
   - `**/*.ripple`
 - `blacklistFolders`:
-  - `**/.cache`
+  - `**/.cache/**`
   - `**/.DS_Store`
-  - `**/.git`
-  - `**/.hg`
-  - `**/.next`
-  - `**/.svn`
-  - `**/bower_components`
-  - `**/CVS`
-  - `**/dist`
-  - `**/node_modules`
-  - `**/tests`
-  - `**/tmp`
+  - `**/.git/**`
+  - `**/.hg/**`
+  - `**/.next/**`
+  - `**/.svn/**`
+  - `**/bower_components/**`
+  - `**/CVS/**`
+  - `**/dist/**`
+  - `**/node_modules/**`
+  - `**/tests/**`
+  - `**/tmp/**`
 
 Both settings accept standard glob patterns (including brace expansions like `**/*.{css,scss}`).
+Note: these are glob patterns (not gitignore rules). To exclude files inside a directory,
+include `/**` at the end (for example `**/dist/**`).
 
 ## LSP Flags & Environment
 
