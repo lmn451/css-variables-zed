@@ -1,5 +1,8 @@
 <template>
-  <div class="container" style="color: var(--vue-color); background: var(--vue-bg);">
+  <div
+    class="container"
+    style="color: var(--vue-color); background: var(--vue-bg)"
+  >
     Vue example
   </div>
 </template>
@@ -13,5 +16,6 @@
 .container {
   padding: 1rem;
   border: 1px solid var(--vue-color);
+  color: var(--vue-bg);
 }
 </style>

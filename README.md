@@ -18,7 +18,8 @@ Project-wide CSS custom properties (variables) support for Zed, powered by `css-
 3. Search for "CSS Variables"
 4. Click Install
 
-On first use, the extension installs `css-variable-lsp@1.0.12` via Zed's `npm:install` capability using Zed's built-in Node.js runtime. No manual Node.js or npm setup is required.
+On first use, the extension downloads a prebuilt `css-variable-lsp` release asset and caches it in
+the extension working directory. No manual Node.js or npm setup is required.
 
 ## Configuration
 
@@ -43,6 +44,12 @@ the Settings JSON (Cmd+, then "Open Settings JSON") or a workspace
 
 Settings must be nested under the `cssVariables` key.
 Provided lists replace the defaults (include any defaults you still want).
+
+Binary resolution order (first match wins):
+1) `lsp.css-variables.binary.path`
+2) `lsp.css-variables.settings.binary` or `lsp.css-variables.settings.cssVariables.binary`
+3) `css-variable-lsp` in PATH
+4) Download the pinned release asset and cache it
 
 Defaults:
 
@@ -141,7 +148,6 @@ Assume a variable is defined in `/Users/you/project/src/styles/theme.css` and yo
 ### Prerequisites
 
 - Rust with `wasm32-wasip1` target: `rustup target add wasm32-wasip1`
-- Node.js and npm (for testing only)
 
 ### Building
 
@@ -162,7 +168,7 @@ cargo test --lib
 # Run integration tests
 ./test_extension.sh
 
-# Run clean installation test (validates npm package installation)
+# Run clean installation test (validates download capability)
 ./test_clean_install.sh
 ```
 
@@ -179,6 +185,6 @@ cargo test --lib
 
 ### Latest: v0.0.7
 
-- Pins `css-variable-lsp` to v1.0.12
-- Uses `npm:install` for automatic dependency setup
+- Pins `css-variable-lsp` to v0.1.5
+- Downloads a prebuilt release asset on first run
 - Runs the server with `--color-only-variables` by default

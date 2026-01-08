@@ -7,8 +7,9 @@ description = "Project-wide CSS variable autocomplete, hover, go-to-definition a
 repository = "https://github.com/lmn451/css-variables-zed"
 
 [[capabilities]]
-kind = "npm:install"
-package = "css-variable-lsp"
+kind = "download_file"
+host = "github.com"
+path = ["lmn451", "css-lsp-rust", "**"]
 
 [language_servers.css-variables]
 name = "CSS Variables Language Server"

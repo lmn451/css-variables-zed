@@ -8,7 +8,8 @@ All notable changes to this project will be documented in this file.
 
 ## 0.0.7
 
-- Updated to `css-variable-lsp` v1.0.12
+- Pinned `css-variable-lsp` to v0.1.5
+- Download prebuilt release assets instead of npm install
 
 ## 0.0.6
 

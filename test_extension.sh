@@ -38,12 +38,16 @@ if ! grep -q 'version = "0.0.8"' extension.toml; then
     echo -e "${RED}❌ Version mismatch${NC}"
     exit 1
 fi
-if ! grep -q 'kind = "npm:install"' extension.toml; then
-    echo -e "${RED}❌ npm:install capability not declared${NC}"
+if ! grep -q 'kind = "download_file"' extension.toml; then
+    echo -e "${RED}❌ download_file capability not declared${NC}"
     exit 1
 fi
-if ! grep -q 'package = "css-variable-lsp"' extension.toml; then
-    echo -e "${RED}❌ npm package not specified in capabilities${NC}"
+if ! grep -q 'host = "github.com"' extension.toml; then
+    echo -e "${RED}❌ download_file host not declared${NC}"
+    exit 1
+fi
+if ! grep -q 'path = \\["lmn451", "css-variable-lsp", "\\*\\*"\\]' extension.toml; then
+    echo -e "${RED}❌ download_file path not declared${NC}"
     exit 1
 fi
 echo -e "${GREEN}✓ extension.toml valid${NC}"
@@ -62,16 +66,16 @@ fi
 echo -e "${GREEN}✓ WASM file valid (${WASM_SIZE} bytes)${NC}"
 
 # Test 4: Check Rust source for correct version
-echo -e "\n${YELLOW}Test 4: Verifying LSP version in source...${NC}"
-if ! grep -q 'let version = "1.0.12"' src/lib.rs; then
-    echo -e "${RED}❌ LSP version mismatch in src/lib.rs${NC}"
+echo -e "\n${YELLOW}Test 4: Verifying LSP release settings in source...${NC}"
+if ! grep -q 'CSS_VARIABLES_RELEASE_TAG' src/lib.rs; then
+    echo -e "${RED}❌ Release tag not defined in src/lib.rs${NC}"
     exit 1
 fi
-if ! grep -q 'let package = "css-variable-lsp"' src/lib.rs; then
-    echo -e "${RED}❌ Package name mismatch in src/lib.rs${NC}"
+if ! grep -q 'CSS_VARIABLES_RELEASE_REPO' src/lib.rs; then
+    echo -e "${RED}❌ Release repo not defined in src/lib.rs${NC}"
     exit 1
 fi
-echo -e "${GREEN}✓ Source code version correct${NC}"
+echo -e "${GREEN}✓ Source code release settings present${NC}"
 
 # Test 5: Verify example files exist for testing
 echo -e "\n${YELLOW}Test 5: Checking example files...${NC}"

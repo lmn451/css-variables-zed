@@ -23,8 +23,8 @@
 - [x] Known limitations documented
 
 ✅ **Extension Configuration**
-- [x] `npm:install` capability declared
-- [x] LSP version: css-variable-lsp@1.0.12
+- [x] `download_file` capability declared
+- [x] LSP version: css-variable-lsp v0.1.5
 - [x] Extension metadata complete (name, description, repository)
 - [x] License specified (GPL-3.0)
 
@@ -82,7 +82,7 @@ When releasing a new version:
 ## Release Checklist for v0.0.7
 
 - [x] Updated to css-variable-lsp@1.0.5-beta.1
-- [x] Added npm:install capability
+- [x] Added download_file capability
 - [x] Created comprehensive test suite
 - [x] Updated documentation
 - [x] All tests passing
