@@ -1,0 +1,9 @@
+{
+  "lsp": {
+    "css-variables": {
+      "binary": {
+        "path": "/Users/applesucks/.cargo/bin/css-variable-lsp"
+      }
+    }
+  }
+}
