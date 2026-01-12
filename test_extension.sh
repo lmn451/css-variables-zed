@@ -34,7 +34,7 @@ if ! grep -q 'id = "css-variables"' extension.toml; then
     echo -e "${RED}❌ Invalid extension id${NC}"
     exit 1
 fi
-if ! grep -q 'version = "0.0.7"' extension.toml; then
+if ! grep -q 'version = "0.0.8"' extension.toml; then
     echo -e "${RED}❌ Version mismatch${NC}"
     exit 1
 fi

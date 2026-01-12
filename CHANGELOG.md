@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.8
+
+- fix issue with Vue files
+
 ## 0.0.7
 
 - Updated to `css-variable-lsp` v1.0.12
@@ -29,7 +33,6 @@ All notable changes to this project will be documented in this file.
 - Updated package references in documentation
 
 ## 0.0.2
-
 
 - Integrates the existing `css-variables-language-server` from the VS Code extension:
   - Indexes CSS custom properties from `*.css`, `*.scss`, `*.sass`, `*.less`.
