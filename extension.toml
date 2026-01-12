@@ -24,7 +24,7 @@ languages = [
   "TypeScript",
   "TSX",
   "Svelte",
-  "Vue",
+  "Vue.js",
   "Astro",
   "PostCSS"
 ]
