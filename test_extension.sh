@@ -61,17 +61,17 @@ if [ "$WASM_SIZE" -lt 10000 ]; then
 fi
 echo -e "${GREEN}✓ WASM file valid (${WASM_SIZE} bytes)${NC}"
 
-# Test 4: Check Rust source for correct version
-echo -e "\n${YELLOW}Test 4: Verifying LSP version in source...${NC}"
-if ! grep -q 'let version = "1.0.12"' src/lib.rs; then
-    echo -e "${RED}❌ LSP version mismatch in src/lib.rs${NC}"
+# Test 4: Check Rust source for latest-version install logic
+echo -e "\n${YELLOW}Test 4: Verifying LSP version logic in source...${NC}"
+if ! grep -q 'npm_package_latest_version' src/lib.rs; then
+    echo -e "${RED}❌ Latest-version lookup missing in src/lib.rs${NC}"
     exit 1
 fi
 if ! grep -q 'let package = "css-variable-lsp"' src/lib.rs; then
     echo -e "${RED}❌ Package name mismatch in src/lib.rs${NC}"
     exit 1
 fi
-echo -e "${GREEN}✓ Source code version correct${NC}"
+echo -e "${GREEN}✓ Source code version logic correct${NC}"
 
 # Test 5: Verify example files exist for testing
 echo -e "\n${YELLOW}Test 5: Checking example files...${NC}"

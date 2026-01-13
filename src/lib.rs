@@ -105,15 +105,47 @@ fn build_css_variables_command(
     user_settings: Option<Value>,
 ) -> zed::Result<zed::Command> {
     let package = "css-variable-lsp";
-    let version = "1.0.12";
+    let npm_version = npm_version_from_settings(user_settings.as_ref())
+        .unwrap_or_else(|| "latest".to_string());
 
     // Install the package if it's missing or on a different version.
-    match zed::npm_package_installed_version(package)? {
-        Some(installed) if installed == version => {
-            // already correct version
+    if npm_version == "latest" {
+        let latest_version = zed::npm_package_latest_version(package);
+        let installed_version = zed::npm_package_installed_version(package)?;
+        match (latest_version, installed_version) {
+            (Ok(latest), Some(installed)) if installed == latest => {
+                // already correct version
+            }
+            (Ok(latest), _) => {
+                zed::npm_install_package(package, &latest)?;
+            }
+            (Err(_), Some(_)) => {
+                // Fall back to the installed version if we can't reach npm.
+            }
+            (Err(err), None) => {
+                return Err(format!(
+                    "Unable to resolve latest npm version for {package}: {err}"
+                ));
+            }
         }
-        _ => {
-            zed::npm_install_package(package, version)?;
+    } else if is_npm_version(&npm_version) {
+        let installed_version = zed::npm_package_installed_version(package)?;
+        if installed_version.as_deref() != Some(npm_version.as_str()) {
+            zed::npm_install_package(package, &npm_version)?;
+        }
+    } else {
+        let installed_version = zed::npm_package_installed_version(package)?;
+        match zed::npm_install_package(package, &npm_version) {
+            Ok(()) => {}
+            Err(err) => {
+                if installed_version.is_some() {
+                    // Fall back to the installed version if we can't reach npm.
+                } else {
+                    return Err(format!(
+                        "Unable to install npm package {package}@{npm_version}: {err}"
+                    ));
+                }
+            }
         }
     }
 
@@ -188,6 +220,21 @@ fn build_settings_args(user_settings: Option<Value>) -> Vec<String> {
     }
 
     args
+}
+
+fn npm_version_from_settings(user_settings: Option<&Value>) -> Option<String> {
+    user_settings
+        .and_then(|settings| settings.get("npmVersion"))
+        .and_then(|value| value.as_str())
+        .map(|value| value.to_string())
+}
+
+fn is_npm_version(value: &str) -> bool {
+    value
+        .chars()
+        .next()
+        .map(|first| first.is_ascii_digit())
+        .unwrap_or(false)
 }
 
 fn extract_string_array(value: &Value) -> Vec<String> {
@@ -303,5 +350,24 @@ mod tests {
         assert!(args.contains(&"--ignore-glob".to_string()));
         assert!(args.contains(&"**/node_modules/**".to_string()));
         assert!(args.contains(&"**/dist/**".to_string()));
+    }
+
+    #[test]
+    fn reads_npm_version_setting() {
+        let user_settings = json!({
+            "npmVersion": "beta"
+        });
+
+        let dist_tag = npm_version_from_settings(Some(&user_settings));
+
+        assert_eq!(dist_tag, Some("beta".to_string()));
+    }
+
+    #[test]
+    fn detects_npm_version_strings() {
+        assert!(is_npm_version("1.0.9"));
+        assert!(is_npm_version("1.0.9-beta.3"));
+        assert!(!is_npm_version("beta"));
+        assert!(!is_npm_version("latest"));
     }
 }

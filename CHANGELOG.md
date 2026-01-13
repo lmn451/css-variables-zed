@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 ## 0.0.8
 
 - fix issue with Vue files
+- Use the latest `css-variable-lsp` on startup
+- Add `npmVersion` setting to opt into beta npm package
 
 ## 0.0.7
 

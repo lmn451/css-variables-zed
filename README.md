@@ -18,7 +18,7 @@ Project-wide CSS custom properties (variables) support for Zed, powered by `css-
 3. Search for "CSS Variables"
 4. Click Install
 
-On first use, the extension installs `css-variable-lsp@1.0.12` via Zed's `npm:install` capability using Zed's built-in Node.js runtime. No manual Node.js or npm setup is required.
+On first use (and whenever a newer version is available), the extension installs the latest `css-variable-lsp` via Zed's `npm:install` capability using Zed's built-in Node.js runtime. No manual Node.js or npm setup is required.
 
 ## Configuration
 
@@ -73,6 +73,26 @@ Defaults:
 Both settings accept standard glob patterns (including brace expansions like `**/*.{css,scss}`).
 Note: these are glob patterns (not gitignore rules). To exclude files inside a directory,
 include `/**` at the end (for example `**/dist/**`).
+
+### NPM Package Version (Optional)
+
+To opt into beta releases, set `npmVersion` in the same `settings` object:
+
+```json
+{
+  "lsp": {
+    "css-variables": {
+      "settings": {
+        "npmVersion": "beta"
+      }
+    }
+  }
+}
+```
+
+Defaults to `latest`. You can also provide an explicit version string (e.g. `1.0.14-beta.3`).
+When set to a dist-tag like `beta`, the extension attempts to install that tag on startup to keep it current.
+If npm is unavailable, it falls back to the already installed version.
 
 ## LSP Flags & Environment
 
@@ -177,8 +197,9 @@ cargo test --lib
 - Cascade resolution is best-effort; the LSP does not model DOM nesting or selector combinators.
 - Rename operations replace full declarations/usages and may adjust formatting.
 
-### Latest: v0.0.7
+### Latest: v0.0.8
 
-- Pins `css-variable-lsp` to v1.0.12
-- Uses `npm:install` for automatic dependency setup
+- Uses the latest `css-variable-lsp` on startup
+- Adds `npmVersion` setting to opt into beta releases
+- Fixes Vue file handling
 - Runs the server with `--color-only-variables` by default
