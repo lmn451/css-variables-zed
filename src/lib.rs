@@ -7,7 +7,7 @@ use zed_extension_api as zed;
 
 const CSS_VARIABLES_BINARY_NAME: &str = "css-variable-lsp";
 const CSS_VARIABLES_RELEASE_REPO: &str = "lmn451/css-lsp-rust";
-const CSS_VARIABLES_RELEASE_TAG: &str = "v0.1.5";
+const CSS_VARIABLES_RELEASE_TAG: &str = "v0.1.6";
 const CSS_VARIABLES_CACHE_PREFIX: &str = "css-variable-lsp-";
 
 struct CssVariablesExtension {
@@ -311,9 +311,13 @@ fn asset_name_for_platform(
     match (platform, arch) {
         (zed::Os::Mac, zed::Architecture::Aarch64) => Ok("css-variable-lsp-macos-aarch64.tar.gz"),
         (zed::Os::Mac, zed::Architecture::X8664) => Ok("css-variable-lsp-macos-x86_64.tar.gz"),
+        (zed::Os::Linux, zed::Architecture::Aarch64) => Ok("css-variable-lsp-linux-aarch64.tar.gz"),
         (zed::Os::Linux, zed::Architecture::X8664) => Ok("css-variable-lsp-linux-x86_64.tar.gz"),
         (zed::Os::Windows, zed::Architecture::X8664) => {
             Ok("css-variable-lsp-windows-x86_64.exe.zip")
+        }
+        (zed::Os::Windows, zed::Architecture::Aarch64) => {
+            Ok("css-variable-lsp-windows-aarch64.exe.zip")
         }
         (platform, arch) => Err(format!("unsupported platform {platform:?} {arch:?}")),
     }
@@ -485,4 +489,56 @@ mod tests {
         assert!(args.contains(&"**/node_modules/**".to_string()));
         assert!(args.contains(&"**/dist/**".to_string()));
     }
+
+    // Asset naming contract tests - these MUST match the LSP repo's release workflow
+    // If these fail, the extension won't be able to download the binary
+
+    #[test]
+    fn asset_name_macos_aarch64() {
+        assert_eq!(
+            asset_name_for_platform(zed::Os::Mac, zed::Architecture::Aarch64).unwrap(),
+            "css-variable-lsp-macos-aarch64.tar.gz"
+        );
+    }
+
+    #[test]
+    fn asset_name_macos_x86_64() {
+        assert_eq!(
+            asset_name_for_platform(zed::Os::Mac, zed::Architecture::X8664).unwrap(),
+            "css-variable-lsp-macos-x86_64.tar.gz"
+        );
+    }
+
+    #[test]
+    fn asset_name_linux_aarch64() {
+        assert_eq!(
+            asset_name_for_platform(zed::Os::Linux, zed::Architecture::Aarch64).unwrap(),
+            "css-variable-lsp-linux-aarch64.tar.gz"
+        );
+    }
+
+    #[test]
+    fn asset_name_linux_x86_64() {
+        assert_eq!(
+            asset_name_for_platform(zed::Os::Linux, zed::Architecture::X8664).unwrap(),
+            "css-variable-lsp-linux-x86_64.tar.gz"
+        );
+    }
+
+    #[test]
+    fn asset_name_windows_aarch64() {
+        assert_eq!(
+            asset_name_for_platform(zed::Os::Windows, zed::Architecture::Aarch64).unwrap(),
+            "css-variable-lsp-windows-aarch64.exe.zip"
+        );
+    }
+
+    #[test]
+    fn asset_name_windows_x86_64() {
+        assert_eq!(
+            asset_name_for_platform(zed::Os::Windows, zed::Architecture::X8664).unwrap(),
+            "css-variable-lsp-windows-x86_64.exe.zip"
+        );
+    }
 }
+

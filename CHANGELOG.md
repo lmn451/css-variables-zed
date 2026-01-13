@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.9
+
+- Bump `css-variable-lsp` to v0.1.6
+- Add Linux/Windows ARM64 release asset support
+
 ## 0.0.8
 
 - fix issue with Vue files
