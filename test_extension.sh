@@ -34,7 +34,7 @@ if ! grep -q 'id = "css-variables"' extension.toml; then
     echo -e "${RED}❌ Invalid extension id${NC}"
     exit 1
 fi
-if ! grep -q 'version = "0.0.8"' extension.toml; then
+if ! grep -q 'version = "0.0.9"' extension.toml; then
     echo -e "${RED}❌ Version mismatch${NC}"
     exit 1
 fi
@@ -46,7 +46,7 @@ if ! grep -q 'host = "github.com"' extension.toml; then
     echo -e "${RED}❌ download_file host not declared${NC}"
     exit 1
 fi
-if ! grep -q 'path = \\["lmn451", "css-variable-lsp", "\\*\\*"\\]' extension.toml; then
+if ! grep -q 'path = \["lmn451", "css-lsp-rust", "\*\*"\]' extension.toml; then
     echo -e "${RED}❌ download_file path not declared${NC}"
     exit 1
 fi
