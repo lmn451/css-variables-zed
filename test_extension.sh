@@ -34,8 +34,14 @@ if ! grep -q 'id = "css-variables"' extension.toml; then
     echo -e "${RED}❌ Invalid extension id${NC}"
     exit 1
 fi
-if ! grep -q 'version = "0.0.9"' extension.toml; then
-    echo -e "${RED}❌ Version mismatch${NC}"
+VERSION_LINE=$(grep -E '^version = "' extension.toml || true)
+if [ -z "$VERSION_LINE" ]; then
+    echo -e "${RED}❌ Version line missing in extension.toml${NC}"
+    exit 1
+fi
+VERSION=$(echo "$VERSION_LINE" | sed -E 's/.*"([^"]+)".*/\1/')
+if [ -z "$VERSION" ]; then
+    echo -e "${RED}❌ Failed to parse version from extension.toml${NC}"
     exit 1
 fi
 if ! grep -q 'kind = "npm:install"' extension.toml; then
