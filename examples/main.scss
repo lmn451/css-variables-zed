@@ -1,0 +1,12 @@
+@use "vars";
+
+.container {
+  color: var(--accent);
+  background: var(--accent-2);
+}
+
+.card {
+  border-color: var(--accent-missing);
+  color: var(--muted);
+  background-color: var(--accent-missing);
+}

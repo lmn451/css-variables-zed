@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::Path;
+use std::time::SystemTime;
 
 use zed::serde_json::Value;
 use zed::settings::{BinarySettings, LspSettings};
@@ -30,6 +31,12 @@ impl CssVariablesExtension {
             return Ok(path);
         }
 
+        let (platform, arch) = zed::current_platform();
+
+        if let Some(path) = find_local_dev_binary(platform) {
+            return Ok(path);
+        }
+
         if let Some(path) = worktree.which(CSS_VARIABLES_BINARY_NAME) {
             return Ok(path);
         }
@@ -40,7 +47,6 @@ impl CssVariablesExtension {
             }
         }
 
-        let (platform, arch) = zed::current_platform();
         let binary_name = binary_name_for_platform(platform);
         let version_dir = format!("{CSS_VARIABLES_CACHE_PREFIX}{CSS_VARIABLES_RELEASE_TAG}");
 
@@ -333,6 +339,43 @@ fn download_type_for_asset(asset_name: &str) -> (zed::DownloadedFileType, bool) 
     } else {
         (zed::DownloadedFileType::Uncompressed, false)
     }
+}
+
+fn find_local_dev_binary(platform: zed::Os) -> Option<String> {
+    let binary_name = binary_name_for_platform(platform);
+    let cwd = std::env::current_dir().ok()?;
+
+    let repo_candidates = ["../css-lsp-rust", "../rust-css-lsp"];
+    let build_kinds = ["release", "debug"];
+    let mut best: Option<(SystemTime, String)> = None;
+
+    for repo in repo_candidates {
+        let repo_root = cwd.join(repo);
+        for build_kind in build_kinds {
+            let candidate = repo_root
+                .join("target")
+                .join(build_kind)
+                .join(binary_name);
+
+            let metadata = match fs::metadata(&candidate) {
+                Ok(metadata) if metadata.is_file() => metadata,
+                _ => continue,
+            };
+
+            let modified = metadata.modified().unwrap_or(SystemTime::UNIX_EPOCH);
+            let path = candidate.to_string_lossy().to_string();
+            let use_candidate = match &best {
+                Some((best_time, _)) => modified > *best_time,
+                None => true,
+            };
+
+            if use_candidate {
+                best = Some((modified, path));
+            }
+        }
+    }
+
+    best.map(|(_, path)| path)
 }
 
 fn find_binary_in_dir(dir: &str, binary_name: &str) -> zed::Result<Option<String>> {

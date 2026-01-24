@@ -178,6 +178,13 @@ cargo test --lib
 2. Open Zed -> Extensions -> Install Dev Extension
 3. Select this directory
 
+### Using a Local css-lsp-rust Dev Build
+
+If the LSP repo is checked out next to this one at `../css-lsp-rust` (or `../rust-css-lsp`) and
+you have built it (`cargo build` or `cargo build --release`), the extension will automatically
+prefer the newest binary from `target/debug` or `target/release`. Explicit binary settings still
+take precedence.
+
 ## Known Limitations
 
 - Cascade resolution is best-effort; the LSP does not model DOM nesting or selector combinators.
