@@ -204,9 +204,7 @@ cargo test --lib
 - Cascade resolution is best-effort; the LSP does not model DOM nesting or selector combinators.
 - Rename operations replace full declarations/usages and may adjust formatting.
 
-### Latest: v0.0.8
-
-- Uses the latest `css-variable-lsp` on startup
-- Adds `npmVersion` setting to opt into beta releases
-- Fixes Vue file handling
+### Latest: v0.0.9
+- Adds `undefinedVarFallback` to control diagnostics for `var()` fallbacks
+- Documents the undefined-var fallback flag/env defaults
 - Runs the server with `--color-only-variables` by default

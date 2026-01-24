@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.9
+
+- Add undefinedVarFallback setting for var() fallback diagnostics
+- Document new undefined var fallback flag/env and default
+- Rebuild extension.wasm
+
 ## 0.0.8
 
 - fix issue with Vue files
