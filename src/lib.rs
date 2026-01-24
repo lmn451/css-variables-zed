@@ -1,8 +1,80 @@
-use zed_extension_api as zed;
-use zed::settings::LspSettings;
+use std::fs;
 use zed::serde_json::Value;
+use zed::settings::LspSettings;
+use zed_extension_api as zed;
 
 struct CssVariablesExtension;
+
+impl CssVariablesExtension {
+    fn language_server_binary_path(
+        &mut self,
+        language_server_id: &zed::LanguageServerId,
+        _worktree: &zed::Worktree,
+    ) -> zed::Result<String> {
+        let release = zed::latest_github_release(
+            "lmn451/css-lsp-rust",
+            zed::GithubReleaseOptions {
+                pre_release: false,
+                require_assets: true,
+            },
+        )?;
+        let (os, arch) = zed::current_platform();
+        let os_name = match os {
+            zed::Os::Mac => "macos",
+            zed::Os::Linux => "linux",
+            zed::Os::Windows => "windows",
+        };
+        let arch_name = match arch {
+            zed::Architecture::Aarch64 => "aarch64",
+            zed::Architecture::X8664 => "x86_64",
+            _ => return Err(format!("unsupported architecture: {:?}", arch)),
+        };
+        let suffix = if os == zed::Os::Windows {
+            "exe.zip"
+        } else {
+            "tar.gz"
+        };
+        let asset_name = format!("css-variable-lsp-{os_name}-{arch_name}.{suffix}");
+
+        let asset = release
+            .assets
+            .iter()
+            .find(|asset| asset.name == asset_name)
+            .ok_or_else(|| format!("no asset found matching {}", asset_name))?;
+
+        let version_dir = format!("css-lsp-rust-{}", release.version);
+        let binary_path = format!(
+            "{version_dir}/css-variable-lsp{}",
+            if os == zed::Os::Windows { ".exe" } else { "" }
+        );
+
+        if !fs::metadata(&binary_path).map_or(false, |m| m.is_file()) {
+            zed::set_language_server_installation_status(
+                language_server_id,
+                &zed::LanguageServerInstallationStatus::Downloading,
+            );
+            zed::download_file(
+                &asset.download_url,
+                &version_dir,
+                zed::DownloadedFileType::Uncompressed,
+            )?;
+
+            zed::make_file_executable(&binary_path)?;
+
+            let entries =
+                fs::read_dir(".").map_err(|e| format!("failed to list working directory: {e}"))?;
+            for entry in entries {
+                let entry = entry.map_err(|e| format!("failed to read directory entry: {e}"))?;
+                let file_name = entry.file_name().to_string_lossy().to_string();
+                if file_name.starts_with("css-lsp-rust-") && file_name != version_dir {
+                    fs::remove_dir_all(entry.path()).ok();
+                }
+            }
+        }
+
+        Ok(binary_path)
+    }
+}
 
 impl zed::Extension for CssVariablesExtension {
     fn new() -> Self {
@@ -22,7 +94,20 @@ impl zed::Extension for CssVariablesExtension {
             .ok()
             .and_then(|lsp_settings| lsp_settings.settings);
 
-        build_css_variables_command(worktree, user_settings)
+        match self.language_server_binary_path(language_server_id, worktree) {
+            Ok(path) => {
+                let env = worktree.shell_env();
+                let merged_settings = build_workspace_settings(user_settings);
+                let args = build_css_variables_args(Some(merged_settings));
+
+                Ok(zed::Command {
+                    command: path,
+                    args,
+                    env,
+                })
+            }
+            Err(_) => build_css_variables_command(worktree, user_settings),
+        }
     }
 
     fn language_server_workspace_configuration(
@@ -106,8 +191,8 @@ fn build_css_variables_command(
     user_settings: Option<Value>,
 ) -> zed::Result<zed::Command> {
     let package = "css-variable-lsp";
-    let npm_version = npm_version_from_settings(user_settings.as_ref())
-        .unwrap_or_else(|| "latest".to_string());
+    let npm_version =
+        npm_version_from_settings(user_settings.as_ref()).unwrap_or_else(|| "latest".to_string());
 
     // Install the package if it's missing or on a different version.
     if npm_version == "latest" {
@@ -154,8 +239,8 @@ fn build_css_variables_command(
 
     // Use JS entrypoint directly to avoid npm .bin shell shim issues on Windows.
     // Get the extension's working directory and construct path to entrypoint
-    let current_dir = std::env::current_dir()
-        .map_err(|e| format!("Could not get current directory: {}", e))?;
+    let current_dir =
+        std::env::current_dir().map_err(|e| format!("Could not get current directory: {}", e))?;
     let entrypoint_path = current_dir
         .join("node_modules")
         .join(package)
@@ -184,10 +269,7 @@ fn build_css_variables_command(
 }
 
 fn build_css_variables_args(user_settings: Option<Value>) -> Vec<String> {
-    let mut args = vec![
-        "--color-only-variables".to_string(),
-        "--stdio".to_string(),
-    ];
+    let mut args = vec!["--color-only-variables".to_string(), "--stdio".to_string()];
 
     args.extend(build_settings_args(user_settings));
     args
