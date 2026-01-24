@@ -70,6 +70,7 @@ fn build_workspace_settings(user_settings: Option<Value>) -> Value {
                 "**/tests/**",
                 "**/tmp/**",
             ],
+            "undefinedVarFallback": "warning",
         }
     });
 
@@ -209,6 +210,10 @@ fn build_settings_args(user_settings: Option<Value>) -> Vec<String> {
         .map(extract_string_array)
         .unwrap_or_default();
 
+    let undefined_var_fallback = css_variables
+        .and_then(|settings| settings.get("undefinedVarFallback"))
+        .and_then(|value| value.as_str());
+
     for glob in lookup_files {
         args.push("--lookup-file".to_string());
         args.push(glob);
@@ -217,6 +222,11 @@ fn build_settings_args(user_settings: Option<Value>) -> Vec<String> {
     for glob in blacklist_folders {
         args.push("--ignore-glob".to_string());
         args.push(glob);
+    }
+
+    if let Some(mode) = undefined_var_fallback {
+        args.push("--undefined-var-fallback".to_string());
+        args.push(mode.to_string());
     }
 
     args
@@ -303,11 +313,28 @@ mod tests {
     }
 
     #[test]
+    fn overrides_undefined_var_fallback_setting() {
+        let user_settings = json!({
+            "cssVariables": {
+                "undefinedVarFallback": "off"
+            }
+        });
+
+        let settings = build_workspace_settings(Some(user_settings));
+
+        assert_eq!(
+            settings["cssVariables"]["undefinedVarFallback"],
+            json!("off")
+        );
+    }
+
+    #[test]
     fn builds_cli_args_from_settings() {
         let user_settings = json!({
             "cssVariables": {
                 "lookupFiles": ["a.css", "b.css"],
-                "blacklistFolders": ["**/dist/**"]
+                "blacklistFolders": ["**/dist/**"],
+                "undefinedVarFallback": "info"
             }
         });
 
@@ -324,6 +351,8 @@ mod tests {
                 "b.css",
                 "--ignore-glob",
                 "**/dist/**",
+                "--undefined-var-fallback",
+                "info",
             ]
         );
     }
@@ -333,7 +362,8 @@ mod tests {
         let user_settings = json!({
             "cssVariables": {
                 "lookupFiles": "a.css",
-                "blacklistFolders": 42
+                "blacklistFolders": 42,
+                "undefinedVarFallback": 123
             }
         });
 
@@ -350,6 +380,8 @@ mod tests {
         assert!(args.contains(&"--ignore-glob".to_string()));
         assert!(args.contains(&"**/node_modules/**".to_string()));
         assert!(args.contains(&"**/dist/**".to_string()));
+        assert!(args.contains(&"--undefined-var-fallback".to_string()));
+        assert!(args.contains(&"warning".to_string()));
     }
 
     #[test]

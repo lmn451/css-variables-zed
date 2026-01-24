@@ -33,7 +33,8 @@ the Settings JSON (Cmd+, then "Open Settings JSON") or a workspace
       "settings": {
         "cssVariables": {
           "lookupFiles": ["**/*.css", "**/*.scss", "**/*.vue"],
-          "blacklistFolders": ["**/dist/**", "**/node_modules/**"]
+          "blacklistFolders": ["**/dist/**", "**/node_modules/**"],
+          "undefinedVarFallback": "info"
         }
       }
     }
@@ -43,6 +44,8 @@ the Settings JSON (Cmd+, then "Open Settings JSON") or a workspace
 
 Settings must be nested under the `cssVariables` key.
 Provided lists replace the defaults (include any defaults you still want).
+`undefinedVarFallback` controls diagnostics when a `var(--name, fallback)` has an
+undefined variable; supported values are `warning` (default), `info`, and `off`.
 
 Defaults:
 
@@ -108,6 +111,7 @@ Supported LSP flags:
 - `--ignore-glob "<glob>"` (repeatable)
 - `--path-display=relative|absolute|abbreviated`
 - `--path-display-length=N`
+- `--undefined-var-fallback=warning|info|off`
 
 Supported environment variables:
 
@@ -117,11 +121,13 @@ Supported environment variables:
 - `CSS_LSP_DEBUG=1`
 - `CSS_LSP_PATH_DISPLAY=relative|absolute|abbreviated`
 - `CSS_LSP_PATH_DISPLAY_LENGTH=1`
+- `CSS_LSP_UNDEFINED_VAR_FALLBACK=warning|info|off`
 
 Defaults:
 
 - `path-display`: `relative`
 - `path-display-length`: `1`
+- `undefined-var-fallback`: `warning`
 - LSP lookup globs:
   - `**/*.css`
   - `**/*.scss`
@@ -138,8 +144,9 @@ Defaults:
   - `**/out/**`
   - `**/.git/**`
 
-Zed forwards `cssVariables.lookupFiles` as repeated `--lookup-file` flags and
-`cssVariables.blacklistFolders` as repeated `--ignore-glob` flags.
+Zed forwards `cssVariables.lookupFiles` as repeated `--lookup-file` flags,
+`cssVariables.blacklistFolders` as repeated `--ignore-glob` flags, and
+`cssVariables.undefinedVarFallback` as `--undefined-var-fallback`.
 
 ### Completion Path Examples
 
