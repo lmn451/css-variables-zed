@@ -18,7 +18,7 @@ impl CssVariablesExtension {
     fn resolve_css_variables_binary(
         &mut self,
         language_server_id: &zed::LanguageServerId,
-        worktree: &zed::Worktree,
+        _worktree: &zed::Worktree,
         _user_settings: Option<&Value>,
         binary_settings: Option<&CommandSettings>,
     ) -> zed::Result<String> {
@@ -30,7 +30,7 @@ impl CssVariablesExtension {
 
         // 2) Check cached binary
         if let Some(path) = &self.cached_binary_path {
-            if fs::metadata(path).map_or(false, |stat| stat.is_file()) {
+            if fs::metadata(path).is_ok_and(|stat| stat.is_file()) {
                 return Ok(path.clone());
             }
         }
@@ -434,11 +434,10 @@ fn find_binary_in_tree(root: &Path, binary_name: &str) -> zed::Result<Option<Str
             if let Some(found) = find_binary_in_tree(&path, binary_name)? {
                 return Ok(Some(found));
             }
-        } else if file_type.is_file() {
-            if entry.file_name().to_str() == Some(binary_name) {
+        } else if file_type.is_file()
+            && entry.file_name().to_str() == Some(binary_name) {
                 return Ok(Some(path.to_string_lossy().to_string()));
             }
-        }
     }
     Ok(None)
 }
