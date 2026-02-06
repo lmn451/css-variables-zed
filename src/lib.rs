@@ -20,15 +20,11 @@ impl CssVariablesExtension {
         &mut self,
         language_server_id: &zed::LanguageServerId,
         worktree: &zed::Worktree,
-        user_settings: Option<&Value>,
+        _user_settings: Option<&Value>,
         binary_settings: Option<&CommandSettings>,
     ) -> zed::Result<String> {
         if let Some(path) = binary_settings.and_then(|settings| settings.path.as_ref()) {
             return Ok(path.clone());
-        }
-
-        if let Some(path) = css_variables_binary_from_settings(user_settings) {
-            return Ok(path);
         }
 
         let (platform, arch) = zed::current_platform();
@@ -361,26 +357,6 @@ fn extract_string_array(value: &Value) -> Vec<String> {
             .filter_map(|item| item.as_str().map(|value| value.to_string()))
             .collect(),
         _ => Vec::new(),
-    }
-}
-
-fn css_variables_binary_from_settings(user_settings: Option<&Value>) -> Option<String> {
-    let settings = user_settings?;
-    if let Some(path) = extract_binary_path(settings.get("binary")) {
-        return Some(path);
-    }
-    let css_variables = settings.get("cssVariables")?;
-    extract_binary_path(css_variables.get("binary"))
-}
-
-fn extract_binary_path(value: Option<&Value>) -> Option<String> {
-    match value? {
-        Value::String(path) => Some(path.clone()),
-        Value::Object(binary) => binary
-            .get("path")
-            .and_then(|path| path.as_str())
-            .map(|path| path.to_string()),
-        _ => None,
     }
 }
 
