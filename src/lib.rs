@@ -1,6 +1,5 @@
 use std::fs;
 use std::path::Path;
-use std::time::SystemTime;
 
 use zed::serde_json::Value;
 use zed::settings::{CommandSettings, LspSettings};
@@ -29,12 +28,7 @@ impl CssVariablesExtension {
 
         let (platform, arch) = zed::current_platform();
 
-        // 2) Local dev binary (for extension developers)
-        if let Some(path) = find_local_dev_binary(platform) {
-            return Ok(path);
-        }
-
-        // 3) Check cached binary
+        // 2) Check cached binary
         if let Some(path) = &self.cached_binary_path {
             if fs::metadata(path).map_or(false, |stat| stat.is_file()) {
                 return Ok(path.clone());
@@ -44,13 +38,13 @@ impl CssVariablesExtension {
         let binary_name = binary_name_for_platform(platform);
         let version_dir = format!("{CSS_VARIABLES_CACHE_PREFIX}{CSS_VARIABLES_RELEASE_TAG}");
 
-        // 3) Already downloaded Rust binary
+        // 2) Already downloaded Rust binary
         if let Some(path) = find_binary_in_dir(&version_dir, binary_name)? {
             self.cached_binary_path = Some(path.clone());
             return Ok(path);
         }
 
-        // 4) Download pinned Rust release
+        // 3) Download pinned Rust release
         zed::set_language_server_installation_status(
             language_server_id,
             &zed::LanguageServerInstallationStatus::CheckingForUpdate,
@@ -128,7 +122,7 @@ impl zed::Extension for CssVariablesExtension {
         ) {
             Ok(path) => path,
             Err(_rust_err) => {
-                // 4) Check PATH before npm fallback
+                // 4) Check PATH before npm fallback (user's own install)
                 if let Some(path) = worktree.which(CSS_VARIABLES_BINARY_NAME) {
                     path
                 } else {
@@ -417,43 +411,6 @@ fn download_type_for_asset(asset_name: &str) -> (zed::DownloadedFileType, bool) 
     } else {
         (zed::DownloadedFileType::Uncompressed, false)
     }
-}
-
-fn find_local_dev_binary(platform: zed::Os) -> Option<String> {
-    let binary_name = binary_name_for_platform(platform);
-    let cwd = std::env::current_dir().ok()?;
-
-    let repo_candidates = ["../css-lsp-rust", "../rust-css-lsp"];
-    let build_kinds = ["release", "debug"];
-    let mut best: Option<(SystemTime, String)> = None;
-
-    for repo in repo_candidates {
-        let repo_root = cwd.join(repo);
-        for build_kind in build_kinds {
-            let candidate = repo_root
-                .join("target")
-                .join(build_kind)
-                .join(binary_name);
-
-            let metadata = match fs::metadata(&candidate) {
-                Ok(metadata) if metadata.is_file() => metadata,
-                _ => continue,
-            };
-
-            let modified = metadata.modified().unwrap_or(SystemTime::UNIX_EPOCH);
-            let path = candidate.to_string_lossy().to_string();
-            let use_candidate = match &best {
-                Some((best_time, _)) => modified > *best_time,
-                None => true,
-            };
-
-            if use_candidate {
-                best = Some((modified, path));
-            }
-        }
-    }
-
-    best.map(|(_, path)| path)
 }
 
 fn find_binary_in_dir(dir: &str, binary_name: &str) -> zed::Result<Option<String>> {

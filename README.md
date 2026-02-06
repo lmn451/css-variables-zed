@@ -50,11 +50,10 @@ Provided lists replace the defaults (include any defaults you still want).
 undefined variable; supported values are `warning` (default), `info`, and `off`.
 
 Binary resolution order (first match wins):
-1) `lsp.css-variables.binary.path`
-2) Local dev binary (for extension developers)
-3) Download the pinned Rust release asset and cache it
-4) `css-variable-lsp` in PATH
-5) Fall back to npm package `css-variable-lsp`
+1) `lsp.css-variables.binary.path` (can point to a local dev build)
+2) Download the pinned Rust release asset and cache it
+3) `css-variable-lsp` in PATH
+4) Fall back to npm package `css-variable-lsp`
 
 Defaults:
 
@@ -202,12 +201,21 @@ cargo test --lib
 2. Open Zed -> Extensions -> Install Dev Extension
 3. Select this directory
 
-### Using a Local css-lsp-rust Dev Build
+### Using a Local LSP Build
 
-If the LSP repo is checked out next to this one at `../css-lsp-rust` (or `../rust-css-lsp`) and
-you have built it (`cargo build` or `cargo build --release`), the extension will automatically
-prefer the newest binary from `target/debug` or `target/release`. Explicit binary settings still
-take precedence.
+To test a local build of `css-lsp-rust`, set `binary.path` in your settings:
+
+```json
+{
+  "lsp": {
+    "css-variables": {
+      "binary": {
+        "path": "/path/to/css-lsp-rust/target/debug/css-variable-lsp"
+      }
+    }
+  }
+}
+```
 
 ## Known Limitations
 
