@@ -19,7 +19,8 @@ Project-wide CSS custom properties (variables) support for Zed, powered by `css-
 4. Click Install
 
 On first use, the extension downloads a prebuilt `css-variable-lsp` release asset and caches it in
-the extension working directory. No manual Node.js or npm setup is required.
+the extension working directory. If the download fails, it falls back to the npm package via Zed's
+built-in Node.js runtime. No manual Node.js or npm setup is required.
 
 ## Configuration
 
@@ -34,7 +35,8 @@ the Settings JSON (Cmd+, then "Open Settings JSON") or a workspace
       "settings": {
         "cssVariables": {
           "lookupFiles": ["**/*.css", "**/*.scss", "**/*.vue"],
-          "blacklistFolders": ["**/dist/**", "**/node_modules/**"]
+          "blacklistFolders": ["**/dist/**", "**/node_modules/**"],
+          "undefinedVarFallback": "info"
         }
       }
     }
@@ -44,12 +46,16 @@ the Settings JSON (Cmd+, then "Open Settings JSON") or a workspace
 
 Settings must be nested under the `cssVariables` key.
 Provided lists replace the defaults (include any defaults you still want).
+`undefinedVarFallback` controls diagnostics when a `var(--name, fallback)` has an
+undefined variable; supported values are `warning` (default), `info`, and `off`.
 
 Binary resolution order (first match wins):
 1) `lsp.css-variables.binary.path`
 2) `lsp.css-variables.settings.binary` or `lsp.css-variables.settings.cssVariables.binary`
-3) `css-variable-lsp` in PATH
-4) Download the pinned release asset and cache it
+3) Local dev binary (for extension developers)
+4) `css-variable-lsp` in PATH
+5) Download the pinned release asset and cache it
+6) Fall back to npm package `css-variable-lsp`
 
 Defaults:
 
@@ -81,6 +87,22 @@ Both settings accept standard glob patterns (including brace expansions like `**
 Note: these are glob patterns (not gitignore rules). To exclude files inside a directory,
 include `/**` at the end (for example `**/dist/**`).
 
+### NPM Package Version (Optional)
+
+To opt into beta releases (used only when falling back to npm), set `npmVersion` in the same `settings` object:
+
+```json
+{
+  "lsp": {
+    "css-variables": {
+      "settings": {
+        "npmVersion": "beta"
+      }
+    }
+  }
+}
+```
+
 ## LSP Flags & Environment
 
 The extension launches `css-variable-lsp` with `--color-only-variables` and `--stdio`.
@@ -95,6 +117,7 @@ Supported LSP flags:
 - `--ignore-glob "<glob>"` (repeatable)
 - `--path-display=relative|absolute|abbreviated`
 - `--path-display-length=N`
+- `--undefined-var-fallback=warning|info|off`
 
 Supported environment variables:
 
@@ -104,11 +127,13 @@ Supported environment variables:
 - `CSS_LSP_DEBUG=1`
 - `CSS_LSP_PATH_DISPLAY=relative|absolute|abbreviated`
 - `CSS_LSP_PATH_DISPLAY_LENGTH=1`
+- `CSS_LSP_UNDEFINED_VAR_FALLBACK=warning|info|off`
 
 Defaults:
 
 - `path-display`: `relative`
 - `path-display-length`: `1`
+- `undefined-var-fallback`: `warning`
 - LSP lookup globs:
   - `**/*.css`
   - `**/*.scss`
@@ -194,5 +219,6 @@ take precedence.
 
 - Pins `css-variable-lsp` to v0.1.6
 - Adds Linux/Windows ARM64 release asset support
-- Downloads a prebuilt release asset on first run
+- Adds `undefinedVarFallback` setting for var() fallback diagnostics
+- Downloads a prebuilt release asset on first run, falls back to npm if needed
 - Runs the server with `--color-only-variables` by default

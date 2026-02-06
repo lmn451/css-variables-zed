@@ -11,6 +11,10 @@ kind = "download_file"
 host = "github.com"
 path = ["lmn451", "css-lsp-rust", "**"]
 
+[[capabilities]]
+kind = "github:download"
+repository = "lmn451/css-lsp-rust"
+
 [language_servers.css-variables]
 name = "CSS Variables Language Server"
 

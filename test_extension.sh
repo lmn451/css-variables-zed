@@ -34,10 +34,17 @@ if ! grep -q 'id = "css-variables"' extension.toml; then
     echo -e "${RED}❌ Invalid extension id${NC}"
     exit 1
 fi
-if ! grep -q 'version = "0.0.9"' extension.toml; then
-    echo -e "${RED}❌ Version mismatch${NC}"
+VERSION_LINE=$(grep -E '^version = "' extension.toml || true)
+if [ -z "$VERSION_LINE" ]; then
+    echo -e "${RED}❌ Version line missing in extension.toml${NC}"
     exit 1
 fi
+VERSION=$(echo "$VERSION_LINE" | sed -E 's/.*"([^"]+)".*/\1/')
+if [ -z "$VERSION" ]; then
+    echo -e "${RED}❌ Failed to parse version from extension.toml${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✓ Version: $VERSION${NC}"
 if ! grep -q 'kind = "download_file"' extension.toml; then
     echo -e "${RED}❌ download_file capability not declared${NC}"
     exit 1
@@ -75,7 +82,11 @@ if ! grep -q 'CSS_VARIABLES_RELEASE_REPO' src/lib.rs; then
     echo -e "${RED}❌ Release repo not defined in src/lib.rs${NC}"
     exit 1
 fi
-echo -e "${GREEN}✓ Source code release settings present${NC}"
+if ! grep -q 'build_npm_fallback_command' src/lib.rs; then
+    echo -e "${RED}❌ npm fallback not defined in src/lib.rs${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✓ Source code release settings present (with npm fallback)${NC}"
 
 # Test 5: Verify example files exist for testing
 echo -e "\n${YELLOW}Test 5: Checking example files...${NC}"

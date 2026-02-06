@@ -3,8 +3,7 @@
 ## Pre-Publishing Checklist
 
 ✅ **Version Updated**
-
-- [x] `extension.toml` version: 0.0.7
+- [x] `extension.toml` version: 0.0.9
 - [x] CHANGELOG.md updated with release notes
 
 ✅ **Code Quality**
@@ -26,9 +25,9 @@
 - [x] Known limitations documented
 
 ✅ **Extension Configuration**
-
-- [x] `download_file` capability declared
-- [x] LSP version: css-variable-lsp v0.1.5
+- [x] `download_file` capability declared (primary: Rust binary)
+- [x] `npm:install` fallback available
+- [x] LSP version: css-variable-lsp v0.1.6 (Rust) / latest (npm fallback)
 - [x] Extension metadata complete (name, description, repository)
 - [x] License specified (GPL-3.0)
 
@@ -48,100 +47,72 @@
    - Sign in with your GitHub account
 
 2. **Publish the extension**
+   - Open Extensions panel (Cmd+Shift+X)
+   - Click on the installed dev extension
+   - Click "Publish" (if available)
 
-   - The Zed team reviews extensions submitted via GitHub
-   - Extensions are typically published from the repository
+### Method 2: Via zed-industries/extensions Repository
 
-3. **Repository Requirements**
-   - Public GitHub repository ✅
-   - Valid `extension.toml` ✅
-   - Valid `extension.wasm` ✅
-   - Clear README ✅
+1. **Fork the extensions repository**
 
-### Method 2: Manual Distribution
-
-Users can install directly from the repository:
-
-1. Clone the repository
-2. Build the extension (see README.md)
-3. In Zed: Extensions → Install Dev Extension → Select directory
-
-## Post-Publishing
-
-- [ ] Test installation from marketplace
-- [ ] Verify LSP auto-installation works
-- [ ] Check that all features work in fresh installation
-- [ ] Monitor for user feedback and issues
-- [ ] Update documentation if needed
-
-## Updating the Extension
-
-When releasing a new version:
-
-1. Update version in `extension.toml`
-2. Update CHANGELOG.md
-3. Run all tests
-4. Build and update `extension.wasm`
-5. Commit changes with descriptive message
-6. Push to GitHub
-7. Create a git tag: `git tag v0.0.X && git push origin v0.0.X`
-
-## Release Checklist for v0.0.7
-
-- [x] Updated to css-variable-lsp@1.0.5-beta.1
-- [x] Added download_file capability
-- [x] Created comprehensive test suite
-- [x] Updated documentation
-- [x] All tests passing
-- [x] Code committed
-- [ ] Code pushed to GitHub
-- [ ] Create git tag v0.0.7
-- [ ] Submit to Zed extension marketplace
-
-## Cross-Repo Release Process
-
-This extension depends on **prebuilt binaries** from the LSP repo (`lmn451/css-lsp-rust`).
-
-### Asset Naming Contract
-
-The extension expects assets with these **exact names**:
-
-| Platform        | Asset Name                                 |
-| --------------- | ------------------------------------------ |
-| macOS aarch64   | `css-variable-lsp-macos-aarch64.tar.gz`    |
-| macOS x86_64    | `css-variable-lsp-macos-x86_64.tar.gz`     |
-| Linux aarch64   | `css-variable-lsp-linux-aarch64.tar.gz`    |
-| Linux x86_64    | `css-variable-lsp-linux-x86_64.tar.gz`     |
-| Windows aarch64 | `css-variable-lsp-windows-aarch64.exe.zip` |
-| Windows x86_64  | `css-variable-lsp-windows-x86_64.exe.zip`  |
-
-> [!CAUTION]
-> Asset names are defined in `src/lib.rs` → `asset_name_for_platform()`. Any changes require a coordinated update in both repos.
-
-### Before Publishing the Extension
-
-1. **Verify LSP release exists** at the tag specified by `CSS_VARIABLES_RELEASE_TAG`
-2. **Verify all 6 assets** are available with correct names
-3. Run the LSP smoke test (in rust-css-lsp repo):
    ```bash
-   ./scripts/smoke-test-release.sh vX.Y.Z
+   git clone https://github.com/zed-industries/extensions
+   cd extensions
    ```
 
-### Updating to a New LSP Version
+2. **Add your extension as a submodule**
 
-1. Update `CSS_VARIABLES_RELEASE_TAG` in `src/lib.rs`
-2. Update `CHANGELOG.md` with LSP version
-3. Bump version in `extension.toml`
-4. Rebuild `extension.wasm`:
+   ```bash
+   git submodule add https://github.com/lmn451/css-variables-zed extensions/css-variables
+   ```
+
+3. **Create a pull request**
+   - Push your fork
+   - Open PR against zed-industries/extensions
+
+## Version Bumping Process
+
+1. Update version in `extension.toml`
+2. Update CHANGELOG.md with release notes
+3. Rebuild WASM:
    ```bash
    cargo build --release --target wasm32-wasip1
    cp target/wasm32-wasip1/release/zed_css_variables.wasm extension.wasm
    ```
-5. Run tests: `./test_extension.sh`
-6. Create tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`
+4. Run tests:
+   ```bash
+   cargo test --lib
+   ./test_extension.sh
+   ./test_clean_install.sh
+   ```
+5. Commit and tag:
+   ```bash
+   git add -A
+   git commit -m "release: v0.0.X"
+   git tag v0.0.X
+   git push && git push --tags
+   ```
 
-## Contact & Support
+## Testing Before Publish
 
-- **Repository**: https://github.com/lmn451/css-variables-zed
-- **Issues**: https://github.com/lmn451/css-variables-zed/issues
-- **License**: GPL-3.0
+```bash
+# Run all tests
+cargo test --lib
+./test_extension.sh
+./test_clean_install.sh
+
+# Test in Zed
+# 1. Open Zed
+# 2. Extensions → Install Dev Extension
+# 3. Select this directory
+# 4. Open a project with CSS files
+# 5. Verify completions, hover, go-to-definition work
+```
+
+## Rollback Process
+
+If issues are discovered after publishing:
+
+1. Revert to previous version in `extension.toml`
+2. Rebuild and republish
+3. Document issue in CHANGELOG.md

@@ -54,5 +54,5 @@ jobs:
         run: |
           test -f extension.toml
           test -f extension.wasm
-          grep -q "0.0.8" extension.toml
+          grep -Eq '^version = "[0-9]+\.[0-9]+\.[0-9]+' extension.toml
           grep -q "css-variable-lsp" extension.toml

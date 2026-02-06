@@ -3,7 +3,7 @@ use std::path::Path;
 use std::time::SystemTime;
 
 use zed::serde_json::Value;
-use zed::settings::{BinarySettings, LspSettings};
+use zed::settings::{CommandSettings, LspSettings};
 use zed_extension_api as zed;
 
 const CSS_VARIABLES_BINARY_NAME: &str = "css-variable-lsp";
@@ -21,7 +21,7 @@ impl CssVariablesExtension {
         language_server_id: &zed::LanguageServerId,
         worktree: &zed::Worktree,
         user_settings: Option<&Value>,
-        binary_settings: Option<&BinarySettings>,
+        binary_settings: Option<&CommandSettings>,
     ) -> zed::Result<String> {
         if let Some(path) = binary_settings.and_then(|settings| settings.path.as_ref()) {
             return Ok(path.clone());
@@ -123,13 +123,31 @@ impl zed::Extension for CssVariablesExtension {
             .as_ref()
             .and_then(|lsp_settings| lsp_settings.binary.as_ref());
 
-        build_css_variables_command(
-            self,
+        // Try Rust binary first, fall back to npm if it fails
+        match self.resolve_css_variables_binary(
             language_server_id,
             worktree,
-            user_settings,
+            user_settings.as_ref(),
             binary_settings,
-        )
+        ) {
+            Ok(command) => {
+                let merged_settings = build_workspace_settings(user_settings);
+                let mut args = build_css_variables_args(Some(merged_settings));
+
+                if let Some(extra_args) =
+                    binary_settings.and_then(|settings| settings.arguments.clone())
+                {
+                    args.extend(extra_args);
+                }
+
+                Ok(zed::Command {
+                    command,
+                    args,
+                    env: worktree.shell_env(),
+                })
+            }
+            Err(_rust_err) => build_npm_fallback_command(worktree, user_settings),
+        }
     }
 
     fn language_server_workspace_configuration(
@@ -177,6 +195,7 @@ fn build_workspace_settings(user_settings: Option<Value>) -> Value {
                 "**/tests/**",
                 "**/tmp/**",
             ],
+            "undefinedVarFallback": "warning",
         }
     });
 
@@ -207,32 +226,85 @@ fn merge_json_value(base: &mut Value, overlay: &Value) {
     *base = overlay.clone();
 }
 
-fn build_css_variables_command(
-    extension: &mut CssVariablesExtension,
-    language_server_id: &zed::LanguageServerId,
+fn build_npm_fallback_command(
     worktree: &zed::Worktree,
     user_settings: Option<Value>,
-    binary_settings: Option<&BinarySettings>,
 ) -> zed::Result<zed::Command> {
-    let command = extension.resolve_css_variables_binary(
-        language_server_id,
-        worktree,
-        user_settings.as_ref(),
-        binary_settings,
-    )?;
+    let package = "css-variable-lsp";
+    let npm_version =
+        npm_version_from_settings(user_settings.as_ref()).unwrap_or_else(|| "latest".to_string());
+
+    // Install the package if it's missing or on a different version.
+    if npm_version == "latest" {
+        let latest_version = zed::npm_package_latest_version(package);
+        let installed_version = zed::npm_package_installed_version(package)?;
+        match (latest_version, installed_version) {
+            (Ok(latest), Some(installed)) if installed == latest => {
+                // already correct version
+            }
+            (Ok(latest), _) => {
+                zed::npm_install_package(package, &latest)?;
+            }
+            (Err(_), Some(_)) => {
+                // Fall back to the installed version if we can't reach npm.
+            }
+            (Err(err), None) => {
+                return Err(format!(
+                    "Unable to resolve latest npm version for {package}: {err}"
+                ));
+            }
+        }
+    } else if is_npm_version(&npm_version) {
+        let installed_version = zed::npm_package_installed_version(package)?;
+        if installed_version.as_deref() != Some(npm_version.as_str()) {
+            zed::npm_install_package(package, &npm_version)?;
+        }
+    } else {
+        let installed_version = zed::npm_package_installed_version(package)?;
+        match zed::npm_install_package(package, &npm_version) {
+            Ok(()) => {}
+            Err(err) => {
+                if installed_version.is_some() {
+                    // Fall back to the installed version if we can't reach npm.
+                } else {
+                    return Err(format!(
+                        "Unable to install npm package {package}@{npm_version}: {err}"
+                    ));
+                }
+            }
+        }
+    }
+
+    let node = zed::node_binary_path()?;
+
+    // Use JS entrypoint directly to avoid npm .bin shell shim issues on Windows.
+    // Get the extension's working directory and construct path to entrypoint
+    let current_dir =
+        std::env::current_dir().map_err(|e| format!("Could not get current directory: {}", e))?;
+    let entrypoint_path = current_dir
+        .join("node_modules")
+        .join(package)
+        .join("out")
+        .join("server.js");
+
+    if !entrypoint_path.exists() {
+        return Err(format!(
+            "Language server entrypoint does not exist: {:?} (current_dir: {:?})",
+            entrypoint_path, current_dir
+        ));
+    }
+
+    let env = worktree.shell_env();
+    let mut args = vec![entrypoint_path.to_string_lossy().to_string()];
 
     // Build merged settings with defaults so CLI args include defaults when user has no custom settings
     let merged_settings = build_workspace_settings(user_settings);
-    let mut args = build_css_variables_args(Some(merged_settings));
-
-    if let Some(extra_args) = binary_settings.and_then(|settings| settings.arguments.clone()) {
-        args.extend(extra_args);
-    }
+    args.extend(build_css_variables_args(Some(merged_settings)));
 
     Ok(zed::Command {
-        command,
+        command: node,
         args,
-        env: worktree.shell_env(),
+        env,
     })
 }
 
@@ -260,6 +332,10 @@ fn build_settings_args(user_settings: Option<Value>) -> Vec<String> {
         .map(extract_string_array)
         .unwrap_or_default();
 
+    let undefined_var_fallback = css_variables
+        .and_then(|settings| settings.get("undefinedVarFallback"))
+        .and_then(|value| value.as_str());
+
     for glob in lookup_files {
         args.push("--lookup-file".to_string());
         args.push(glob);
@@ -268,6 +344,11 @@ fn build_settings_args(user_settings: Option<Value>) -> Vec<String> {
     for glob in blacklist_folders {
         args.push("--ignore-glob".to_string());
         args.push(glob);
+    }
+
+    if let Some(mode) = undefined_var_fallback {
+        args.push("--undefined-var-fallback".to_string());
+        args.push(mode.to_string());
     }
 
     args
@@ -301,6 +382,21 @@ fn extract_binary_path(value: Option<&Value>) -> Option<String> {
             .map(|path| path.to_string()),
         _ => None,
     }
+}
+
+fn npm_version_from_settings(user_settings: Option<&Value>) -> Option<String> {
+    user_settings
+        .and_then(|settings| settings.get("npmVersion"))
+        .and_then(|value| value.as_str())
+        .map(|value| value.to_string())
+}
+
+fn is_npm_version(value: &str) -> bool {
+    value
+        .chars()
+        .next()
+        .map(|first| first.is_ascii_digit())
+        .unwrap_or(false)
 }
 
 fn binary_name_for_platform(platform: zed::Os) -> &'static str {
@@ -484,11 +580,28 @@ mod tests {
     }
 
     #[test]
+    fn overrides_undefined_var_fallback_setting() {
+        let user_settings = json!({
+            "cssVariables": {
+                "undefinedVarFallback": "off"
+            }
+        });
+
+        let settings = build_workspace_settings(Some(user_settings));
+
+        assert_eq!(
+            settings["cssVariables"]["undefinedVarFallback"],
+            json!("off")
+        );
+    }
+
+    #[test]
     fn builds_cli_args_from_settings() {
         let user_settings = json!({
             "cssVariables": {
                 "lookupFiles": ["a.css", "b.css"],
-                "blacklistFolders": ["**/dist/**"]
+                "blacklistFolders": ["**/dist/**"],
+                "undefinedVarFallback": "info"
             }
         });
 
@@ -505,6 +618,8 @@ mod tests {
                 "b.css",
                 "--ignore-glob",
                 "**/dist/**",
+                "--undefined-var-fallback",
+                "info",
             ]
         );
     }
@@ -514,7 +629,8 @@ mod tests {
         let user_settings = json!({
             "cssVariables": {
                 "lookupFiles": "a.css",
-                "blacklistFolders": 42
+                "blacklistFolders": 42,
+                "undefinedVarFallback": 123
             }
         });
 
@@ -531,6 +647,27 @@ mod tests {
         assert!(args.contains(&"--ignore-glob".to_string()));
         assert!(args.contains(&"**/node_modules/**".to_string()));
         assert!(args.contains(&"**/dist/**".to_string()));
+        assert!(args.contains(&"--undefined-var-fallback".to_string()));
+        assert!(args.contains(&"warning".to_string()));
+    }
+
+    #[test]
+    fn reads_npm_version_setting() {
+        let user_settings = json!({
+            "npmVersion": "beta"
+        });
+
+        let dist_tag = npm_version_from_settings(Some(&user_settings));
+
+        assert_eq!(dist_tag, Some("beta".to_string()));
+    }
+
+    #[test]
+    fn detects_npm_version_strings() {
+        assert!(is_npm_version("1.0.9"));
+        assert!(is_npm_version("1.0.9-beta.3"));
+        assert!(!is_npm_version("beta"));
+        assert!(!is_npm_version("latest"));
     }
 
     // Asset naming contract tests - these MUST match the LSP repo's release workflow

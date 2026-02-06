@@ -6,10 +6,14 @@ All notable changes to this project will be documented in this file.
 
 - Bump `css-variable-lsp` to v0.1.6
 - Add Linux/Windows ARM64 release asset support
+- Add undefinedVarFallback setting for var() fallback diagnostics
+- Add npm fallback when Rust binary download fails
 
 ## 0.0.8
 
 - fix issue with Vue files
+- Use the latest `css-variable-lsp` on startup
+- Add `npmVersion` setting to opt into beta npm package
 
 ## 0.0.7
 

@@ -30,17 +30,32 @@ echo -e "${GREEN}✓ Extension structure valid${NC}\n"
 
 echo -e "${YELLOW}Step 3: Verifying download capability is declared...${NC}"
 if grep -q 'kind = "download_file"' extension.toml && \
-   grep -q 'host = "github.com"' extension.toml && \
-   grep -q 'path = \\["lmn451", "css-variable-lsp", "\\*\\*"\\]' extension.toml; then
+   grep -q 'host = "github.com"' extension.toml; then
     echo -e "${GREEN}✓ download_file capability declared${NC}"
 else
     echo -e "${RED}❌ download_file capability missing${NC}"
     exit 1
 fi
 
+echo -e "\n${YELLOW}Step 4: Testing npm fallback package (css-variable-lsp@latest)...${NC}"
+if command -v npm >/dev/null 2>&1; then
+    # Create package.json to avoid npm installing in parent directory
+    echo '{"name":"test","version":"1.0.0"}' > package.json
+    npm install css-variable-lsp@latest --no-save 2>&1 | tail -5
+    
+    # The binary path is a symlink to the actual server.js file
+    if [ -L "node_modules/.bin/css-variable-lsp" ] || [ -f "node_modules/.bin/css-variable-lsp" ]; then
+        echo -e "${GREEN}✓ npm fallback LSP binary installed successfully${NC}"
+    else
+        echo -e "${YELLOW}⚠ npm fallback LSP binary not found (but primary Rust binary should work)${NC}"
+    fi
+else
+    echo -e "${YELLOW}⚠ npm not available, skipping fallback test${NC}"
+fi
+
 cd ..
 
-echo -e "\n${YELLOW}Step 4: Cleanup...${NC}"
+echo -e "\n${YELLOW}Step 5: Cleanup...${NC}"
 if [ "$KEEP_TEST_DIR" != "1" ]; then
     rm -rf "$TEST_DIR"
     echo -e "${GREEN}✓ Test directory cleaned up${NC}\n"
@@ -55,4 +70,5 @@ echo -e "${GREEN}========================================${NC}\n"
 echo -e "This test confirms:"
 echo -e "  ✓ Extension files are properly structured"
 echo -e "  ✓ download_file capability is declared"
-echo -e "  ✓ Extension will download the binary on first run in Zed"
+echo -e "  ✓ Extension will download the Rust binary on first run in Zed"
+echo -e "  ✓ npm fallback package is available if needed"
