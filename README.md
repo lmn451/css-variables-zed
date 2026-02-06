@@ -52,8 +52,8 @@ undefined variable; supported values are `warning` (default), `info`, and `off`.
 Binary resolution order (first match wins):
 1) `lsp.css-variables.binary.path`
 2) Local dev binary (for extension developers)
-3) `css-variable-lsp` in PATH
-4) Download the pinned release asset and cache it
+3) Download the pinned Rust release asset and cache it
+4) `css-variable-lsp` in PATH
 5) Fall back to npm package `css-variable-lsp`
 
 Defaults:

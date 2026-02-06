@@ -29,14 +29,12 @@ impl CssVariablesExtension {
 
         let (platform, arch) = zed::current_platform();
 
+        // 2) Local dev binary (for extension developers)
         if let Some(path) = find_local_dev_binary(platform) {
             return Ok(path);
         }
 
-        if let Some(path) = worktree.which(CSS_VARIABLES_BINARY_NAME) {
-            return Ok(path);
-        }
-
+        // 3) Check cached binary
         if let Some(path) = &self.cached_binary_path {
             if fs::metadata(path).map_or(false, |stat| stat.is_file()) {
                 return Ok(path.clone());
@@ -46,11 +44,13 @@ impl CssVariablesExtension {
         let binary_name = binary_name_for_platform(platform);
         let version_dir = format!("{CSS_VARIABLES_CACHE_PREFIX}{CSS_VARIABLES_RELEASE_TAG}");
 
+        // 3) Already downloaded Rust binary
         if let Some(path) = find_binary_in_dir(&version_dir, binary_name)? {
             self.cached_binary_path = Some(path.clone());
             return Ok(path);
         }
 
+        // 4) Download pinned Rust release
         zed::set_language_server_installation_status(
             language_server_id,
             &zed::LanguageServerInstallationStatus::CheckingForUpdate,
@@ -119,31 +119,37 @@ impl zed::Extension for CssVariablesExtension {
             .as_ref()
             .and_then(|lsp_settings| lsp_settings.binary.as_ref());
 
-        // Try Rust binary first, fall back to npm if it fails
-        match self.resolve_css_variables_binary(
+        // Try Rust binary first, then PATH, then fall back to npm
+        let command = match self.resolve_css_variables_binary(
             language_server_id,
             worktree,
             user_settings.as_ref(),
             binary_settings,
         ) {
-            Ok(command) => {
-                let merged_settings = build_workspace_settings(user_settings);
-                let mut args = build_css_variables_args(Some(merged_settings));
-
-                if let Some(extra_args) =
-                    binary_settings.and_then(|settings| settings.arguments.clone())
-                {
-                    args.extend(extra_args);
+            Ok(path) => path,
+            Err(_rust_err) => {
+                // 4) Check PATH before npm fallback
+                if let Some(path) = worktree.which(CSS_VARIABLES_BINARY_NAME) {
+                    path
+                } else {
+                    // 5) npm fallback
+                    return build_npm_fallback_command(worktree, user_settings);
                 }
-
-                Ok(zed::Command {
-                    command,
-                    args,
-                    env: worktree.shell_env(),
-                })
             }
-            Err(_rust_err) => build_npm_fallback_command(worktree, user_settings),
+        };
+
+        let merged_settings = build_workspace_settings(user_settings);
+        let mut args = build_css_variables_args(Some(merged_settings));
+
+        if let Some(extra_args) = binary_settings.and_then(|settings| settings.arguments.clone()) {
+            args.extend(extra_args);
         }
+
+        Ok(zed::Command {
+            command,
+            args,
+            env: worktree.shell_env(),
+        })
     }
 
     fn language_server_workspace_configuration(
