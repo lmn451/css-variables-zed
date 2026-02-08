@@ -861,7 +861,7 @@ dependencies = [
 
 [[package]]
 name = "zed-css-variables"
-version = "0.0.9"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "flate2",

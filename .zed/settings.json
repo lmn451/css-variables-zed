@@ -2,7 +2,7 @@
   "lsp": {
     "css-variables": {
       "binary": {
-        "path": "/Users/applesucks/.cargo/bin/css-variable-lsp"
+        "path": "/Users/applesucks/dev/zed-51/rust-css-lsp/target/debug/css-variable-lsp"
       }
     }
   }

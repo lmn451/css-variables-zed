@@ -222,7 +222,7 @@ To test a local build of `css-lsp-rust`, set `binary.path` in your settings:
 - Cascade resolution is best-effort; the LSP does not model DOM nesting or selector combinators.
 - Rename operations replace full declarations/usages and may adjust formatting.
 
-### Latest: v0.0.9
+### Latest: v0.1.0
 
 - Pins `css-variable-lsp` to v0.1.6
 - Adds Linux/Windows ARM64 release asset support

@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.0
+
+- **Major**: Extension now automatically downloads the latest `css-variable-lsp` release
+- Changed `CSS_VARIABLES_RELEASE_TAG` from pinned version (v0.1.6) to "latest"
+- GitHub's `/releases/latest/download/` endpoint automatically resolves to the newest release
+- Extension fetches the most recent LSP version on each fresh install without extension updates
+- Simplified implementation using hardcoded "latest" tag for reliability
+- Updated extension version to 0.1.0
+
 ## 0.0.9
 
 - Bump `css-variable-lsp` to v0.1.6

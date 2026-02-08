@@ -1,10 +1,10 @@
-<template>
-  <div
-    class="container"
-    style="color: var(--vue-color); background: var(--vue-bg)"
-  >
-    Vue example
-  </div>
+<template lang="ts">
+<div
+  class="container"
+  style="color: var(--vue-color); background: var(--vue-bg)"
+>
+  Vue example
+</div>;
 </template>
 
 <style>

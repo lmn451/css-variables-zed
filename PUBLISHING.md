@@ -3,7 +3,7 @@
 ## Pre-Publishing Checklist
 
 ✅ **Version Updated**
-- [x] `extension.toml` version: 0.0.9
+- [x] `extension.toml` version: 0.1.0
 - [x] CHANGELOG.md updated with release notes
 
 ✅ **Code Quality**
@@ -27,7 +27,7 @@
 ✅ **Extension Configuration**
 - [x] `download_file` capability declared (primary: Rust binary)
 - [x] `npm:install` fallback available
-- [x] LSP version: css-variable-lsp v0.1.6 (Rust) / latest (npm fallback)
+- [x] LSP version: css-variable-lsp latest (auto-resolved via GitHub API) / latest (npm fallback)
 - [x] Extension metadata complete (name, description, repository)
 - [x] License specified (GPL-3.0)
 

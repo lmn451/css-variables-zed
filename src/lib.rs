@@ -7,7 +7,7 @@ use zed_extension_api as zed;
 
 const CSS_VARIABLES_BINARY_NAME: &str = "css-variable-lsp";
 const CSS_VARIABLES_RELEASE_REPO: &str = "lmn451/css-lsp-rust";
-const CSS_VARIABLES_RELEASE_TAG: &str = "v0.1.6";
+const CSS_VARIABLES_RELEASE_TAG: &str = "latest";
 const CSS_VARIABLES_CACHE_PREFIX: &str = "css-variable-lsp-";
 
 struct CssVariablesExtension {
@@ -36,6 +36,8 @@ impl CssVariablesExtension {
         }
 
         let binary_name = binary_name_for_platform(platform);
+
+        // Resolve "latest" tag to actual version
         let version_dir = format!("{CSS_VARIABLES_CACHE_PREFIX}{CSS_VARIABLES_RELEASE_TAG}");
 
         // 2) Already downloaded Rust binary
@@ -434,10 +436,9 @@ fn find_binary_in_tree(root: &Path, binary_name: &str) -> zed::Result<Option<Str
             if let Some(found) = find_binary_in_tree(&path, binary_name)? {
                 return Ok(Some(found));
             }
-        } else if file_type.is_file()
-            && entry.file_name().to_str() == Some(binary_name) {
-                return Ok(Some(path.to_string_lossy().to_string()));
-            }
+        } else if file_type.is_file() && entry.file_name().to_str() == Some(binary_name) {
+            return Ok(Some(path.to_string_lossy().to_string()));
+        }
     }
     Ok(None)
 }
@@ -657,5 +658,11 @@ mod tests {
             asset_name_for_platform(zed::Os::Windows, zed::Architecture::X8664).unwrap(),
             "css-variable-lsp-windows-x86_64.exe.zip"
         );
+    }
+
+    #[test]
+    fn release_tag_is_latest() {
+        // Verify we use "latest" to always download newest LSP release
+        assert_eq!(CSS_VARIABLES_RELEASE_TAG, "latest");
     }
 }
