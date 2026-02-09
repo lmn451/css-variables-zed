@@ -18,7 +18,9 @@ Project-wide CSS custom properties (variables) support for Zed, powered by `css-
 3. Search for "CSS Variables"
 4. Click Install
 
-On first use (and whenever a newer version is available), the extension installs the latest `css-variable-lsp` via Zed's `npm:install` capability using Zed's built-in Node.js runtime. No manual Node.js or npm setup is required.
+On first use, the extension downloads a prebuilt `css-variable-lsp` release asset and caches it in
+the extension working directory. If the download fails, it falls back to the npm package via Zed's
+built-in Node.js runtime. No manual Node.js or npm setup is required.
 
 ## Configuration
 
@@ -46,6 +48,12 @@ Settings must be nested under the `cssVariables` key.
 Provided lists replace the defaults (include any defaults you still want).
 `undefinedVarFallback` controls diagnostics when a `var(--name, fallback)` has an
 undefined variable; supported values are `warning` (default), `info`, and `off`.
+
+Binary resolution order (first match wins):
+1) `lsp.css-variables.binary.path` (can point to a local dev build)
+2) Download the pinned Rust release asset and cache it
+3) `css-variable-lsp` in PATH
+4) Fall back to npm package `css-variable-lsp`
 
 Defaults:
 
@@ -79,7 +87,7 @@ include `/**` at the end (for example `**/dist/**`).
 
 ### NPM Package Version (Optional)
 
-To opt into beta releases, set `npmVersion` in the same `settings` object:
+To opt into beta releases (used only when falling back to npm), set `npmVersion` in the same `settings` object:
 
 ```json
 {
@@ -92,10 +100,6 @@ To opt into beta releases, set `npmVersion` in the same `settings` object:
   }
 }
 ```
-
-Defaults to `latest`. You can also provide an explicit version string (e.g. `1.0.14-beta.3`).
-When set to a dist-tag like `beta`, the extension attempts to install that tag on startup to keep it current.
-If npm is unavailable, it falls back to the already installed version.
 
 ## LSP Flags & Environment
 
@@ -144,9 +148,8 @@ Defaults:
   - `**/out/**`
   - `**/.git/**`
 
-Zed forwards `cssVariables.lookupFiles` as repeated `--lookup-file` flags,
-`cssVariables.blacklistFolders` as repeated `--ignore-glob` flags, and
-`cssVariables.undefinedVarFallback` as `--undefined-var-fallback`.
+Zed forwards `cssVariables.lookupFiles` as repeated `--lookup-file` flags and
+`cssVariables.blacklistFolders` as repeated `--ignore-glob` flags.
 
 ### Completion Path Examples
 
@@ -168,7 +171,6 @@ Assume a variable is defined in `/Users/you/project/src/styles/theme.css` and yo
 ### Prerequisites
 
 - Rust with `wasm32-wasip1` target: `rustup target add wasm32-wasip1`
-- Node.js and npm (for testing only)
 
 ### Building
 
@@ -189,7 +191,7 @@ cargo test --lib
 # Run integration tests
 ./test_extension.sh
 
-# Run clean installation test (validates npm package installation)
+# Run clean installation test (validates download capability)
 ./test_clean_install.sh
 ```
 
@@ -199,12 +201,31 @@ cargo test --lib
 2. Open Zed -> Extensions -> Install Dev Extension
 3. Select this directory
 
+### Using a Local LSP Build
+
+To test a local build of `css-lsp-rust`, set `binary.path` in your settings:
+
+```json
+{
+  "lsp": {
+    "css-variables": {
+      "binary": {
+        "path": "/path/to/css-lsp-rust/target/debug/css-variable-lsp"
+      }
+    }
+  }
+}
+```
+
 ## Known Limitations
 
 - Cascade resolution is best-effort; the LSP does not model DOM nesting or selector combinators.
 - Rename operations replace full declarations/usages and may adjust formatting.
 
-### Latest: v0.0.9
-- Adds `undefinedVarFallback` to control diagnostics for `var()` fallbacks
-- Documents the undefined-var fallback flag/env defaults
+### Latest: v0.1.0
+
+- Pins `css-variable-lsp` to v0.1.6
+- Adds Linux/Windows ARM64 release asset support
+- Adds `undefinedVarFallback` setting for var() fallback diagnostics
+- Downloads a prebuilt release asset on first run, falls back to npm if needed
 - Runs the server with `--color-only-variables` by default

@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.0
+
+- **Major**: Extension now automatically downloads the latest `css-variable-lsp` release
+- Changed `CSS_VARIABLES_RELEASE_TAG` from pinned version (v0.1.6) to "latest"
+- GitHub's `/releases/latest/download/` endpoint automatically resolves to the newest release
+- Extension fetches the most recent LSP version on each fresh install without extension updates
+- Simplified implementation using hardcoded "latest" tag for reliability
+- Updated extension version to 0.1.0
+
 ## 0.0.9
 
+- Bump `css-variable-lsp` to v0.1.6
+- Add Linux/Windows ARM64 release asset support
 - Add undefinedVarFallback setting for var() fallback diagnostics
-- Document new undefined var fallback flag/env and default
-- Rebuild extension.wasm
+- Add npm fallback when Rust binary download fails
 
 ## 0.0.8
 
@@ -16,7 +26,8 @@ All notable changes to this project will be documented in this file.
 
 ## 0.0.7
 
-- Updated to `css-variable-lsp` v1.0.12
+- Pinned `css-variable-lsp` to v0.1.5
+- Download prebuilt release assets instead of npm install
 
 ## 0.0.6
 

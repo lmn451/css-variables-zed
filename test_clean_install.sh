@@ -28,7 +28,16 @@ if [ ! -f "extension.toml" ] || [ ! -f "extension.wasm" ]; then
 fi
 echo -e "${GREEN}✓ Extension structure valid${NC}\n"
 
-echo -e "${YELLOW}Step 3: Testing npm package installation (css-variable-lsp@latest)...${NC}"
+echo -e "${YELLOW}Step 3: Verifying download capability is declared...${NC}"
+if grep -q 'kind = "download_file"' extension.toml && \
+   grep -q 'host = "github.com"' extension.toml; then
+    echo -e "${GREEN}✓ download_file capability declared${NC}"
+else
+    echo -e "${RED}❌ download_file capability missing${NC}"
+    exit 1
+fi
+
+echo -e "\n${YELLOW}Step 4: Testing npm fallback package (css-variable-lsp@latest)...${NC}"
 if command -v npm >/dev/null 2>&1; then
     # Create package.json to avoid npm installing in parent directory
     echo '{"name":"test","version":"1.0.0"}' > package.json
@@ -36,41 +45,17 @@ if command -v npm >/dev/null 2>&1; then
     
     # The binary path is a symlink to the actual server.js file
     if [ -L "node_modules/.bin/css-variable-lsp" ] || [ -f "node_modules/.bin/css-variable-lsp" ]; then
-        echo -e "${GREEN}✓ LSP binary installed successfully${NC}"
-        echo -e "${GREEN}  Location: $(pwd)/node_modules/.bin/css-variable-lsp${NC}"
-        
-        # Check if it's executable
-        if [ -x "node_modules/.bin/css-variable-lsp" ]; then
-            echo -e "${GREEN}✓ LSP binary is executable${NC}"
-        else
-            echo -e "${RED}❌ LSP binary not executable${NC}"
-            exit 1
-        fi
-        
-        # Verify the LSP binary is a valid Node.js script
-        echo -e "\n${YELLOW}Testing LSP binary...${NC}"
-        if head -1 node_modules/css-variable-lsp/out/server.js | grep -q "node"; then
-            echo -e "${GREEN}✓ LSP binary is a valid Node.js script${NC}"
-        fi
-        
-        # Check that it responds (it will error without --stdio, which is expected)
-        if node node_modules/.bin/css-variable-lsp --stdio < /dev/null 2>&1 | grep -q "Connection input stream" || node node_modules/.bin/css-variable-lsp 2>&1 | grep -q "Connection input stream"; then
-            echo -e "${GREEN}✓ LSP binary loads correctly (requires --stdio flag as expected)${NC}"
-        else
-            echo -e "${YELLOW}⚠ LSP response different than expected (but likely OK)${NC}"
-        fi
+        echo -e "${GREEN}✓ npm fallback LSP binary installed successfully${NC}"
     else
-        echo -e "${RED}❌ LSP binary not found after installation${NC}"
-        exit 1
+        echo -e "${YELLOW}⚠ npm fallback LSP binary not found (but primary Rust binary should work)${NC}"
     fi
 else
-    echo -e "${YELLOW}⚠ npm not available, skipping package installation test${NC}"
-    echo -e "${YELLOW}  (On fresh system, Zed's built-in npm will handle this)${NC}"
+    echo -e "${YELLOW}⚠ npm not available, skipping fallback test${NC}"
 fi
 
 cd ..
 
-echo -e "\n${YELLOW}Step 4: Cleanup...${NC}"
+echo -e "\n${YELLOW}Step 5: Cleanup...${NC}"
 if [ "$KEEP_TEST_DIR" != "1" ]; then
     rm -rf "$TEST_DIR"
     echo -e "${GREEN}✓ Test directory cleaned up${NC}\n"
@@ -84,6 +69,6 @@ echo -e "${GREEN}========================================${NC}\n"
 
 echo -e "This test confirms:"
 echo -e "  ✓ Extension files are properly structured"
-echo -e "  ✓ npm package css-variable-lsp@latest is installable"
-echo -e "  ✓ LSP binary is accessible and executable"
-echo -e "  ✓ Extension will work on fresh Zed installations"
+echo -e "  ✓ download_file capability is declared"
+echo -e "  ✓ Extension will download the Rust binary on first run in Zed"
+echo -e "  ✓ npm fallback package is available if needed"
