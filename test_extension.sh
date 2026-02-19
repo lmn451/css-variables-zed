@@ -74,19 +74,19 @@ echo -e "${GREEN}✓ WASM file valid (${WASM_SIZE} bytes)${NC}"
 
 # Test 4: Check Rust source for correct version
 echo -e "\n${YELLOW}Test 4: Verifying LSP release settings in source...${NC}"
-if ! grep -q 'CSS_VARIABLES_RELEASE_TAG' src/lib.rs; then
-    echo -e "${RED}❌ Release tag not defined in src/lib.rs${NC}"
-    exit 1
-fi
 if ! grep -q 'CSS_VARIABLES_RELEASE_REPO' src/lib.rs; then
     echo -e "${RED}❌ Release repo not defined in src/lib.rs${NC}"
+    exit 1
+fi
+if ! grep -q 'latest_github_release' src/lib.rs; then
+    echo -e "${RED}❌ latest GitHub release resolution not defined in src/lib.rs${NC}"
     exit 1
 fi
 if ! grep -q 'build_npm_fallback_command' src/lib.rs; then
     echo -e "${RED}❌ npm fallback not defined in src/lib.rs${NC}"
     exit 1
 fi
-echo -e "${GREEN}✓ Source code release settings present (with npm fallback)${NC}"
+echo -e "${GREEN}✓ Source code release settings present (latest + npm fallback)${NC}"
 
 # Test 5: Verify example files exist for testing
 echo -e "\n${YELLOW}Test 5: Checking example files...${NC}"
