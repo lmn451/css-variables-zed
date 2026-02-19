@@ -7,7 +7,6 @@ use zed_extension_api as zed;
 
 const CSS_VARIABLES_BINARY_NAME: &str = "css-variable-lsp";
 const CSS_VARIABLES_RELEASE_REPO: &str = "lmn451/css-lsp-rust";
-const CSS_VARIABLES_RELEASE_TAG: &str = "latest";
 const CSS_VARIABLES_CACHE_PREFIX: &str = "css-variable-lsp-";
 
 struct CssVariablesExtension {
@@ -22,13 +21,14 @@ impl CssVariablesExtension {
         _user_settings: Option<&Value>,
         binary_settings: Option<&CommandSettings>,
     ) -> zed::Result<String> {
+        // 1) User-configured binary path
         if let Some(path) = binary_settings.and_then(|settings| settings.path.as_ref()) {
             return Ok(path.clone());
         }
 
         let (platform, arch) = zed::current_platform();
 
-        // 2) Check cached binary
+        // 2) Check in-memory cached binary
         if let Some(path) = &self.cached_binary_path {
             if fs::metadata(path).is_ok_and(|stat| stat.is_file()) {
                 return Ok(path.clone());
@@ -37,26 +37,27 @@ impl CssVariablesExtension {
 
         let binary_name = binary_name_for_platform(platform);
 
-        // Resolve "latest" tag to actual version
-        let version_dir = format!("{CSS_VARIABLES_CACHE_PREFIX}{CSS_VARIABLES_RELEASE_TAG}");
-
-        // 2) Already downloaded Rust binary
-        if let Some(path) = find_binary_in_dir(&version_dir, binary_name)? {
-            self.cached_binary_path = Some(path.clone());
-            return Ok(path);
-        }
-
-        // 3) Download pinned Rust release
+        // 3) Fetch the actual latest release version from GitHub
         zed::set_language_server_installation_status(
             language_server_id,
             &zed::LanguageServerInstallationStatus::CheckingForUpdate,
         );
 
+        let release = fetch_latest_release()?;
+        let version = &release.version;
+        let version_dir = format!("{CSS_VARIABLES_CACHE_PREFIX}{version}");
+
+        // 4) Already downloaded this version
+        if let Some(path) = find_binary_in_dir(&version_dir, binary_name)? {
+            self.cached_binary_path = Some(path.clone());
+            return Ok(path);
+        }
+
+        // 5) Download the release
         let asset_name = asset_name_for_platform(platform, arch)?;
+        let asset = find_asset_for_platform(&release, asset_name)?;
         let (download_type, is_archive) = download_type_for_asset(asset_name);
-        let download_url = format!(
-            "https://github.com/{CSS_VARIABLES_RELEASE_REPO}/releases/download/{CSS_VARIABLES_RELEASE_TAG}/{asset_name}"
-        );
+
         fs::create_dir_all(&version_dir)
             .map_err(|err| format!("failed to create directory '{version_dir}': {err}"))?;
 
@@ -66,7 +67,7 @@ impl CssVariablesExtension {
         );
 
         let binary_path = if is_archive {
-            zed::download_file(&download_url, &version_dir, download_type)
+            zed::download_file(&asset.download_url, &version_dir, download_type)
                 .map_err(|err| format!("failed to download {asset_name}: {err}"))?;
 
             find_binary_in_dir(&version_dir, binary_name)?.ok_or_else(|| {
@@ -75,7 +76,7 @@ impl CssVariablesExtension {
         } else {
             let binary_path = format!("{version_dir}/{binary_name}");
             if !Path::new(&binary_path).exists() {
-                zed::download_file(&download_url, &binary_path, download_type)
+                zed::download_file(&asset.download_url, &binary_path, download_type)
                     .map_err(|err| format!("failed to download {asset_name}: {err}"))?;
             }
             binary_path
@@ -415,6 +416,30 @@ fn download_type_for_asset(asset_name: &str) -> (zed::DownloadedFileType, bool) 
     }
 }
 
+fn fetch_latest_release() -> zed::Result<zed::GithubRelease> {
+    let options = zed::GithubReleaseOptions {
+        require_assets: true,
+        pre_release: false,
+    };
+    zed::latest_github_release(CSS_VARIABLES_RELEASE_REPO, options)
+}
+
+fn find_asset_for_platform<'a>(
+    release: &'a zed::GithubRelease,
+    asset_name: &str,
+) -> zed::Result<&'a zed::GithubReleaseAsset> {
+    release
+        .assets
+        .iter()
+        .find(|asset| asset.name == asset_name)
+        .ok_or_else(|| {
+            format!(
+                "release {} does not contain expected asset '{}'",
+                release.version, asset_name
+            )
+        })
+}
+
 fn find_binary_in_dir(dir: &str, binary_name: &str) -> zed::Result<Option<String>> {
     let root = Path::new(dir);
     if !root.exists() {
@@ -661,8 +686,8 @@ mod tests {
     }
 
     #[test]
-    fn release_tag_is_latest() {
-        // Verify we use "latest" to always download newest LSP release
-        assert_eq!(CSS_VARIABLES_RELEASE_TAG, "latest");
+    fn release_repo_is_configured() {
+        // Verify the GitHub repo used for fetching releases
+        assert_eq!(CSS_VARIABLES_RELEASE_REPO, "lmn451/css-lsp-rust");
     }
 }
