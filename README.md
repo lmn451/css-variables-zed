@@ -18,9 +18,10 @@ Project-wide CSS custom properties (variables) support for Zed, powered by `css-
 3. Search for "CSS Variables"
 4. Click Install
 
-On first use, the extension downloads a prebuilt `css-variable-lsp` release asset and caches it in
-the extension working directory. If the download fails, it falls back to the npm package via Zed's
-built-in Node.js runtime. No manual Node.js or npm setup is required.
+On startup, the extension checks for the latest prebuilt `css-variable-lsp` release asset and caches
+it in the extension working directory. If the latest release cannot be reached, it falls back to the
+best available cached Rust binary, then PATH, then npm via Zed's built-in Node.js runtime. No manual
+Node.js or npm setup is required.
 
 ## Configuration
 
@@ -51,9 +52,10 @@ undefined variable; supported values are `warning` (default), `info`, and `off`.
 
 Binary resolution order (first match wins):
 1) `lsp.css-variables.binary.path` (can point to a local dev build)
-2) Download the pinned Rust release asset and cache it
-3) `css-variable-lsp` in PATH
-4) Fall back to npm package `css-variable-lsp`
+2) Resolve latest `lmn451/css-lsp-rust` release and use/download the matching asset
+3) Use any previously cached Rust binary if latest release check/download fails
+4) `css-variable-lsp` in PATH (used only when its version matches target npm version)
+5) Fall back to npm package `css-variable-lsp` (installs/updates before launch)
 
 Defaults:
 
@@ -224,8 +226,8 @@ To test a local build of `css-lsp-rust`, set `binary.path` in your settings:
 
 ### Latest: v0.1.0
 
-- Pins `css-variable-lsp` to v0.1.6
+- Resolves latest `css-lsp-rust` release on startup
 - Adds Linux/Windows ARM64 release asset support
 - Adds `undefinedVarFallback` setting for var() fallback diagnostics
-- Downloads a prebuilt release asset on first run, falls back to npm if needed
+- Uses cached Rust, PATH, then npm fallback when latest release is unavailable
 - Runs the server with `--color-only-variables` by default
