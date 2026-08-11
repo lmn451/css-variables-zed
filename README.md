@@ -194,7 +194,8 @@ cp target/wasm32-wasip1/release/zed_css_variables.wasm extension.wasm
 cargo test --locked --lib
 
 # Run integration tests
-# This rebuilds the pinned stable artifact and fails if extension.wasm differs.
+# This rebuilds the pinned stable artifact and fails on meaningful differences.
+# Platform-specific WASM `name` metadata is canonicalized before comparison.
 ./test_extension.sh
 
 # Run clean installation test (validates download capability)

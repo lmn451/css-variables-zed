@@ -12,7 +12,7 @@
 - [x] Integration tests passing (`./test_extension.sh`)
 - [x] Clean install test passing (`./test_clean_install.sh`)
 - [x] Extension builds successfully
-- [x] WASM file up to date (verified byte-for-byte by `test_extension.sh`)
+- [x] WASM file up to date (verified by canonical comparison in `test_extension.sh`)
 
 **Note:** All tests validate the extension works correctly without requiring Docker.
 

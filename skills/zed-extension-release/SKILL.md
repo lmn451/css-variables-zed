@@ -52,6 +52,6 @@ python3 /Users/applesucks/.codex/skills/zed-extension-release/scripts/zed_extens
 - Updates release checklist/version fields in `PUBLISHING.md` if present.
 - Updates hardcoded version checks in release tests when present (e.g., `test_extension.sh`, `.github/workflows/test.yml`).
 - `--build` uses the pinned stable toolchain and runs `cargo build --locked --release --target wasm32-wasip1`, then copies the result to `extension.wasm`.
-- `--run-tests` runs `cargo test --locked --lib`, `./test_extension.sh`, and `./test_clean_install.sh`. The integration test verifies the tracked WASM byte-for-byte and fails on mismatch.
+- `--run-tests` runs `cargo test --locked --lib`, `./test_extension.sh`, and `./test_clean_install.sh`. The integration test canonically compares the tracked WASM, ignoring only platform-specific `name` metadata, and fails on meaningful mismatch.
 - `--commit` fails on unrelated changes unless `--allow-dirty` is used.
 - `--tag` creates `v<version>`; `--push` pushes commit + tag to `origin` (override with `--remote`).
