@@ -178,6 +178,7 @@ impl zed::Extension for CssVariablesExtension {
         let binary_settings = lsp_settings
             .as_ref()
             .and_then(|lsp_settings| lsp_settings.binary.as_ref());
+        let binary_arguments = binary_settings.and_then(|settings| settings.arguments.as_deref());
 
         // Try Rust binary first, then PATH if it's current, then fall back to npm
         let command = match self.resolve_css_variables_binary(
@@ -194,21 +195,22 @@ impl zed::Extension for CssVariablesExtension {
                         path
                     } else {
                         // 5) npm fallback (and update)
-                        return build_npm_fallback_command(worktree, user_settings);
+                        return build_npm_fallback_command(
+                            worktree,
+                            user_settings,
+                            binary_arguments,
+                        );
                     }
                 } else {
                     // 5) npm fallback
-                    return build_npm_fallback_command(worktree, user_settings);
+                    return build_npm_fallback_command(worktree, user_settings, binary_arguments);
                 }
             }
         };
 
         let merged_settings = build_workspace_settings(user_settings);
         let mut args = build_css_variables_args(Some(merged_settings));
-
-        if let Some(extra_args) = binary_settings.and_then(|settings| settings.arguments.clone()) {
-            args.extend(extra_args);
-        }
+        append_binary_arguments(&mut args, binary_arguments);
 
         Ok(zed::Command {
             command,
@@ -296,6 +298,7 @@ fn merge_json_value(base: &mut Value, overlay: &Value) {
 fn build_npm_fallback_command(
     worktree: &zed::Worktree,
     user_settings: Option<Value>,
+    binary_arguments: Option<&[String]>,
 ) -> zed::Result<zed::Command> {
     let package = CSS_VARIABLES_NPM_PACKAGE;
     let npm_version =
@@ -362,17 +365,34 @@ fn build_npm_fallback_command(
     }
 
     let env = worktree.shell_env();
-    let mut args = vec![entrypoint_path.to_string_lossy().to_string()];
-
-    // Build merged settings with defaults so CLI args include defaults when user has no custom settings
-    let merged_settings = build_workspace_settings(user_settings);
-    args.extend(build_css_variables_args(Some(merged_settings)));
+    let args = build_npm_fallback_args(&entrypoint_path, user_settings, binary_arguments);
 
     Ok(zed::Command {
         command: node,
         args,
         env,
     })
+}
+
+fn build_npm_fallback_args(
+    entrypoint_path: &std::path::Path,
+    user_settings: Option<Value>,
+    binary_arguments: Option<&[String]>,
+) -> Vec<String> {
+    let mut args = vec![entrypoint_path.to_string_lossy().to_string()];
+
+    // Build merged settings with defaults so CLI args include defaults when user has no custom settings.
+    let merged_settings = build_workspace_settings(user_settings);
+    args.extend(build_css_variables_args(Some(merged_settings)));
+    append_binary_arguments(&mut args, binary_arguments);
+
+    args
+}
+
+fn append_binary_arguments(args: &mut Vec<String>, binary_arguments: Option<&[String]>) {
+    if let Some(binary_arguments) = binary_arguments {
+        args.extend(binary_arguments.iter().cloned());
+    }
 }
 
 fn build_css_variables_args(user_settings: Option<Value>) -> Vec<String> {
@@ -916,6 +936,38 @@ mod tests {
                 "--undefined-var-fallback",
                 "info",
             ]
+        );
+    }
+
+    #[test]
+    fn npm_fallback_args_preserve_binary_arguments_after_generated_args() {
+        let user_settings = json!({
+            "cssVariables": {
+                "lookupFiles": ["**/*.css"],
+                "undefinedVarFallback": "info"
+            }
+        });
+        let binary_arguments = vec![
+            "--path-display=absolute".to_string(),
+            "--custom-flag".to_string(),
+        ];
+
+        let args = build_npm_fallback_args(
+            std::path::Path::new("/extension/node_modules/css-variable-lsp/out/server.js"),
+            Some(user_settings),
+            Some(binary_arguments.as_slice()),
+        );
+
+        assert_eq!(
+            args.first(),
+            Some(&"/extension/node_modules/css-variable-lsp/out/server.js".to_string())
+        );
+        assert!(args.contains(&"--color-only-variables".to_string()));
+        assert!(args.contains(&"--ignore-glob".to_string()));
+        assert!(args.contains(&"**/node_modules/**".to_string()));
+        assert_eq!(
+            &args[args.len() - binary_arguments.len()..],
+            binary_arguments
         );
     }
 
