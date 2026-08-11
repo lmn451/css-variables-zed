@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import hashlib
+import itertools
 import sys
 from pathlib import Path
 from typing import Iterator, Tuple
@@ -81,6 +82,23 @@ def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def section_summaries(data: bytes) -> Iterator[Tuple[int, str, int, str]]:
+    """Yield index, label, raw section size, and section hash for diagnostics."""
+
+    for index, (section_start, payload_start, payload_end, section_id) in enumerate(
+        iter_sections(data)
+    ):
+        if section_id == 0:
+            name = custom_section_name(data, payload_start, payload_end).decode(
+                "utf-8", "replace"
+            )
+            label = f"custom:{name}"
+        else:
+            label = f"section:{section_id}"
+        section = data[section_start:payload_end]
+        yield index, label, len(section), sha256(section)
+
+
 def compare_paths(left_path: Path, right_path: Path) -> int:
     try:
         left = left_path.read_bytes()
@@ -106,6 +124,13 @@ def compare_paths(left_path: Path, right_path: Path) -> int:
         f"sha256={sha256(right_canonical)}",
         file=sys.stderr,
     )
+    print("  differing sections:", file=sys.stderr)
+    for left_section, right_section in itertools.zip_longest(
+        section_summaries(left), section_summaries(right)
+    ):
+        if left_section != right_section:
+            print(f"    built={left_section}", file=sys.stderr)
+            print(f"    tracked={right_section}", file=sys.stderr)
     return 1
 
 
