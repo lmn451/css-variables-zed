@@ -8,11 +8,11 @@
 
 ✅ **Code Quality**
 
-- [x] All tests passing (`cargo test --lib`)
+- [x] All tests passing (`cargo test --locked --lib`)
 - [x] Integration tests passing (`./test_extension.sh`)
 - [x] Clean install test passing (`./test_clean_install.sh`)
 - [x] Extension builds successfully
-- [x] WASM file up to date
+- [x] WASM file up to date (verified byte-for-byte by `test_extension.sh`)
 
 **Note:** All tests validate the extension works correctly without requiring Docker.
 
@@ -76,12 +76,12 @@
 2. Update CHANGELOG.md with release notes
 3. Rebuild WASM:
    ```bash
-   cargo build --release --target wasm32-wasip1
+   cargo build --locked --release --target wasm32-wasip1
    cp target/wasm32-wasip1/release/zed_css_variables.wasm extension.wasm
    ```
 4. Run tests:
    ```bash
-   cargo test --lib
+   cargo test --locked --lib
    ./test_extension.sh
    ./test_clean_install.sh
    ```
@@ -97,7 +97,7 @@
 
 ```bash
 # Run all tests
-cargo test --lib
+cargo test --locked --lib
 ./test_extension.sh
 ./test_clean_install.sh
 

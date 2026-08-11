@@ -2,7 +2,7 @@
 # Integration test script for zed-css-variables extension
 # This script validates the extension build and structure
 
-set -e
+set -euo pipefail
 
 echo "🧪 Testing zed-css-variables extension..."
 
@@ -102,21 +102,27 @@ echo -e "${GREEN}✓ Example files present${NC}"
 
 # Test 6: Build test
 echo -e "\n${YELLOW}Test 6: Testing build process...${NC}"
-if ! cargo build --release --target wasm32-wasip1 2>&1 | grep -q "Finished"; then
-    echo -e "${RED}❌ Build failed${NC}"
-    exit 1
-fi
+cargo build --locked --release --target wasm32-wasip1
 echo -e "${GREEN}✓ Build successful${NC}"
 
 # Test 7: Verify built WASM matches current
 echo -e "\n${YELLOW}Test 7: Verifying WASM is up-to-date...${NC}"
-BUILT_SIZE=$(stat -f%z target/wasm32-wasip1/release/zed_css_variables.wasm 2>/dev/null || stat -c%s target/wasm32-wasip1/release/zed_css_variables.wasm 2>/dev/null)
-CURRENT_SIZE=$(stat -f%z extension.wasm 2>/dev/null || stat -c%s extension.wasm 2>/dev/null)
-if [ "$BUILT_SIZE" != "$CURRENT_SIZE" ]; then
-    echo -e "${YELLOW}⚠ WASM file size mismatch (built: $BUILT_SIZE, current: $CURRENT_SIZE)${NC}"
-    echo -e "${YELLOW}  Run: cp target/wasm32-wasip1/release/zed_css_variables.wasm extension.wasm${NC}"
+BUILT_WASM="target/wasm32-wasip1/release/zed_css_variables.wasm"
+if [ ! -f "$BUILT_WASM" ]; then
+    echo -e "${RED}❌ Built WASM file not found: $BUILT_WASM${NC}"
+    exit 1
 fi
-echo -e "${GREEN}✓ WASM verification complete${NC}"
+
+if ! cmp -s "$BUILT_WASM" extension.wasm; then
+    BUILT_SIZE=$(stat -f%z "$BUILT_WASM" 2>/dev/null || stat -c%s "$BUILT_WASM" 2>/dev/null)
+    CURRENT_SIZE=$(stat -f%z extension.wasm 2>/dev/null || stat -c%s extension.wasm 2>/dev/null)
+    echo -e "${RED}❌ WASM artifact is stale or was built with a different toolchain${NC}"
+    echo -e "${RED}   Built: $BUILT_SIZE bytes${NC}"
+    echo -e "${RED}   Current: $CURRENT_SIZE bytes${NC}"
+    echo -e "${YELLOW}  Run: cp $BUILT_WASM extension.wasm${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✓ WASM artifact matches the pinned stable build${NC}"
 
 echo -e "\n${GREEN}========================================${NC}"
 echo -e "${GREEN}✅ All tests passed!${NC}"

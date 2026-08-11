@@ -10,6 +10,17 @@ jobs:
     name: Release Zed Extension
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.97.1
+          targets: wasm32-wasip1
+
+      - name: Verify extension artifact
+        run: ./test_extension.sh
+
       - uses: huacnlee/zed-extension-action@v2
         with:
           extension-name: css-variables

@@ -25,6 +25,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: 1.97.1
           targets: wasm32-wasip1
 
       - name: Cache Cargo
@@ -39,10 +40,10 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Run Rust tests
-        run: cargo test --lib
+        run: cargo test --locked --lib
 
       - name: Build WASM
-        run: cargo build --release --target wasm32-wasip1
+        run: cargo build --locked --release --target wasm32-wasip1
 
       - name: Run integration tests
         run: ./test_extension.sh

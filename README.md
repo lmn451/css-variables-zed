@@ -176,9 +176,12 @@ Assume a variable is defined in `/Users/you/project/src/styles/theme.css` and yo
 
 ### Building
 
+The repository pins a stable Rust toolchain in `rust-toolchain.toml` and the
+build uses the locked dependency graph.
+
 ```bash
 # Build the extension
-cargo build --release --target wasm32-wasip1
+cargo build --locked --release --target wasm32-wasip1
 
 # Copy WASM to extension root
 cp target/wasm32-wasip1/release/zed_css_variables.wasm extension.wasm
@@ -188,9 +191,10 @@ cp target/wasm32-wasip1/release/zed_css_variables.wasm extension.wasm
 
 ```bash
 # Run Rust unit tests
-cargo test --lib
+cargo test --locked --lib
 
 # Run integration tests
+# This rebuilds the pinned stable artifact and fails if extension.wasm differs.
 ./test_extension.sh
 
 # Run clean installation test (validates download capability)
