@@ -154,7 +154,7 @@ def ensure_repo_files() -> None:
 
 
 def build_wasm() -> None:
-    run(["cargo", "build", "--locked", "--release", "--target", "wasm32-wasip1"])
+    run(["./scripts/build_wasm.sh"])
     built = ROOT / "target" / "wasm32-wasip1" / "release" / "zed_css_variables.wasm"
     if not built.exists():
         die("build succeeded but wasm file not found")

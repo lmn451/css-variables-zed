@@ -76,7 +76,7 @@
 2. Update CHANGELOG.md with release notes
 3. Rebuild WASM:
    ```bash
-   cargo build --locked --release --target wasm32-wasip1
+   ./scripts/build_wasm.sh
    cp target/wasm32-wasip1/release/zed_css_variables.wasm extension.wasm
    ```
 4. Run tests:

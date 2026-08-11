@@ -107,7 +107,7 @@ echo -e "${GREEN}✓ WASM comparator tests passed${NC}"
 
 # Test 7: Build test
 echo -e "\n${YELLOW}Test 7: Testing build process...${NC}"
-cargo build --locked --release --target wasm32-wasip1
+./scripts/build_wasm.sh
 echo -e "${GREEN}✓ Build successful${NC}"
 
 # Test 8: Verify built WASM matches current

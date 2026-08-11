@@ -43,7 +43,7 @@ jobs:
         run: cargo test --locked --lib
 
       - name: Build WASM
-        run: cargo build --locked --release --target wasm32-wasip1
+        run: ./scripts/build_wasm.sh
 
       - name: Run integration tests
         run: ./test_extension.sh

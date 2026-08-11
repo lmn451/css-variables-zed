@@ -180,12 +180,15 @@ The repository pins a stable Rust toolchain in `rust-toolchain.toml` and the
 build uses the locked dependency graph.
 
 ```bash
-# Build the extension
-cargo build --locked --release --target wasm32-wasip1
+# Build the extension with deterministic compiler paths
+./scripts/build_wasm.sh
 
 # Copy WASM to extension root
 cp target/wasm32-wasip1/release/zed_css_variables.wasm extension.wasm
 ```
+
+The build helper remaps repository and Cargo registry paths so the tracked WASM
+can be compared consistently across local machines and CI runners.
 
 ### Testing
 
