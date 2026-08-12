@@ -134,7 +134,7 @@ def update_publishing(path: pathlib.Path, version: str) -> Tuple[str, str, List[
 def update_test_version_checks(path: pathlib.Path, version: str) -> Tuple[str, str, bool]:
     text = read_text(path)
     updated, count = re.subn(
-        r"(grep\s+-q\s+["\'])(\d+\.\d+\.\d+)(["\']\s+extension\.toml)",
+        r'''(grep\s+-q\s+["'])(\d+\.\d+\.\d+)(["']\s+extension\.toml)''',
         rf"\1{version}\3",
         text,
     )
@@ -154,7 +154,7 @@ def ensure_repo_files() -> None:
 
 
 def build_wasm() -> None:
-    run(["cargo", "build", "--release", "--target", "wasm32-wasip1"])
+    run(["./scripts/build_wasm.sh"])
     built = ROOT / "target" / "wasm32-wasip1" / "release" / "zed_css_variables.wasm"
     if not built.exists():
         die("build succeeded but wasm file not found")
@@ -162,7 +162,7 @@ def build_wasm() -> None:
 
 
 def run_tests() -> None:
-    run(["cargo", "test", "--lib"])
+    run(["cargo", "test", "--locked", "--lib"])
     run(["./test_extension.sh"])
     run(["./test_clean_install.sh"])
 
