@@ -135,7 +135,7 @@ def update_test_version_checks(path: pathlib.Path, version: str) -> Tuple[str, s
     text = read_text(path)
     updated, count = re.subn(
         r'''(grep\s+-q\s+["'])(\d+\.\d+\.\d+)(["']\s+extension\.toml)''',
-        rf"\1{version}\3",
+        rf"\g<1>{version}\g<3>",
         text,
     )
     return text, updated, count > 0

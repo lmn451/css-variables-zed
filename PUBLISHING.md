@@ -3,7 +3,7 @@
 ## Pre-Publishing Checklist
 
 ✅ **Version Updated**
-- [x] `extension.toml` version: 0.1.0
+- [x] `extension.toml` version: 0.1.1
 - [x] CHANGELOG.md updated with release notes
 
 ✅ **Code Quality**

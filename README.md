@@ -232,10 +232,7 @@ To test a local build of `css-lsp-rust`, set `binary.path` in your settings:
 - Cascade resolution is best-effort; the LSP does not model DOM nesting or selector combinators.
 - Rename operations replace full declarations/usages and may adjust formatting.
 
-### Latest: v0.1.0
+### Latest: v0.1.1
 
-- Resolves latest `css-lsp-rust` release on startup
-- Adds Linux/Windows ARM64 release asset support
-- Adds `undefinedVarFallback` setting for var() fallback diagnostics
-- Uses cached Rust, PATH, then npm fallback when latest release is unavailable
-- Runs the server with `--color-only-variables` by default
+- Preserves configured `binary.arguments` when command resolution falls back to npm
+- Pins reproducible stable-Rust WASM builds and rejects stale artifacts in CI and releases

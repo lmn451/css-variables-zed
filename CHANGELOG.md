@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.1
+
+- Preserve configured binary.arguments when command resolution falls back to npm.
+- Pin reproducible stable-Rust WASM builds and fail CI or releases when the committed artifact is stale.
+
 ## 0.1.0
 
 - **Major**: Extension now automatically downloads the latest `css-variable-lsp` release
