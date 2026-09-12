@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- Add opt-in `eagerJs` configuration to index CSS-in-JS in unopened JavaScript/TypeScript files.
+
 ## 0.1.1
 
 - Preserve configured binary.arguments when command resolution falls back to npm.

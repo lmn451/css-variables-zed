@@ -4,7 +4,9 @@ Project-wide CSS custom properties (variables) support for Zed, powered by `css-
 
 ## Features
 
-- Workspace indexing of CSS variables across `.css`, `.scss`, `.sass`, `.less`, and HTML `<style>` blocks / inline styles.
+- Workspace indexing of CSS variables across `.css`, `.scss`, `.sass`, `.less`, and
+  HTML `<style>` blocks / inline styles; optional eager indexing of CSS-in-JS in
+  unopened JavaScript/TypeScript files.
 - Context-aware completion for `var(--...)` and CSS property values.
 - Hover that shows cascade-ordered definitions (`!important`, specificity, source order).
 - Go to definition and find references for CSS variables.
@@ -37,7 +39,8 @@ the Settings JSON (Cmd+, then "Open Settings JSON") or a workspace
         "cssVariables": {
           "lookupFiles": ["**/*.css", "**/*.scss", "**/*.vue"],
           "blacklistFolders": ["**/dist/**", "**/node_modules/**"],
-          "undefinedVarFallback": "info"
+          "undefinedVarFallback": "info",
+          "eagerJs": true
         }
       }
     }
@@ -49,6 +52,8 @@ Settings must be nested under the `cssVariables` key.
 Provided lists replace the defaults (include any defaults you still want).
 `undefinedVarFallback` controls diagnostics when a `var(--name, fallback)` has an
 undefined variable; supported values are `warning` (default), `info`, and `off`.
+Set `eagerJs` to `true` to pass `--eager-js` and index CSS-in-JS from unopened
+JavaScript/TypeScript files during workspace scanning.
 
 Binary resolution order (first match wins):
 1) `lsp.css-variables.binary.path` (can point to a local dev build)
@@ -69,6 +74,7 @@ Defaults:
   - `**/*.svelte`
   - `**/*.astro`
   - `**/*.ripple`
+- `eagerJs`: `false` (set to `true` to scan unopened JS/TS-family files)
 - `blacklistFolders`:
   - `**/.cache/**`
   - `**/.DS_Store`
@@ -106,11 +112,13 @@ To opt into beta releases (used only when falling back to npm), set `npmVersion`
 ## LSP Flags & Environment
 
 The extension launches `css-variable-lsp` with `--color-only-variables` and `--stdio`.
+Set `cssVariables.eagerJs` to `true` to also pass `--eager-js`.
 
 Supported LSP flags:
 
 - `--no-color-preview`
 - `--color-only-variables`
+- `--eager-js`
 - `--lookup-files "<glob>,<glob>"`
 - `--lookup-file "<glob>"` (repeatable)
 - `--ignore-globs "<glob>,<glob>"`
@@ -122,6 +130,7 @@ Supported LSP flags:
 Supported environment variables:
 
 - `CSS_LSP_COLOR_ONLY_VARIABLES=1`
+- `CSS_LSP_EAGER_JS=1`
 - `CSS_LSP_LOOKUP_FILES` (comma-separated globs)
 - `CSS_LSP_IGNORE_GLOBS` (comma-separated globs)
 - `CSS_LSP_DEBUG=1`
@@ -134,6 +143,7 @@ Defaults:
 - `path-display`: `relative`
 - `path-display-length`: `1`
 - `undefined-var-fallback`: `warning`
+- `eager-js`: disabled by default
 - LSP lookup globs:
   - `**/*.css`
   - `**/*.scss`
@@ -151,7 +161,8 @@ Defaults:
   - `**/.git/**`
 
 Zed forwards `cssVariables.lookupFiles` as repeated `--lookup-file` flags and
-`cssVariables.blacklistFolders` as repeated `--ignore-glob` flags.
+`cssVariables.blacklistFolders` as repeated `--ignore-glob` flags. Setting
+`cssVariables.eagerJs` to `true` also forwards `--eager-js`.
 
 ### Completion Path Examples
 
