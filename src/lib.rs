@@ -265,6 +265,7 @@ fn build_workspace_settings(user_settings: Option<Value>) -> Value {
                 "**/tmp/**",
             ],
             "undefinedVarFallback": "warning",
+            "eagerJs": false,
         }
     });
 
@@ -422,6 +423,15 @@ fn build_settings_args(user_settings: Option<Value>) -> Vec<String> {
     let undefined_var_fallback = css_variables
         .and_then(|settings| settings.get("undefinedVarFallback"))
         .and_then(|value| value.as_str());
+
+    let eager_js = css_variables
+        .and_then(|settings| settings.get("eagerJs"))
+        .and_then(|value| value.as_bool())
+        .unwrap_or(false);
+
+    if eager_js {
+        args.push("--eager-js".to_string());
+    }
 
     for glob in lookup_files {
         args.push("--lookup-file".to_string());
@@ -851,7 +861,8 @@ mod tests {
         let user_settings = json!({
             "cssVariables": {
                 "lookupFiles": ["**/*.css"],
-                "blacklistFolders": ["**/dist"]
+                "blacklistFolders": ["**/dist"],
+                "eagerJs": true
             }
         });
 
@@ -862,6 +873,7 @@ mod tests {
             settings["cssVariables"]["blacklistFolders"],
             json!(["**/dist"])
         );
+        assert_eq!(settings["cssVariables"]["eagerJs"], json!(true));
     }
 
     #[test]
@@ -892,6 +904,7 @@ mod tests {
 
         assert_eq!(settings["cssVariables"]["lookupFiles"], json!(["**/*.vue"]));
         assert!(settings["cssVariables"]["blacklistFolders"].is_array());
+        assert_eq!(settings["cssVariables"]["eagerJs"], json!(false));
     }
 
     #[test]
@@ -937,6 +950,17 @@ mod tests {
                 "info",
             ]
         );
+    }
+
+    #[test]
+    fn builds_eager_js_arg_when_enabled() {
+        let user_settings = json!({
+            "cssVariables": {
+                "eagerJs": true
+            }
+        });
+        let args = build_css_variables_args(Some(user_settings));
+        assert!(args.contains(&"--eager-js".to_string()));
     }
 
     #[test]
@@ -1152,7 +1176,7 @@ mod tests {
 
     #[test]
     fn cached_dir_sort_prefers_newest_semver_over_lexical_order() {
-        let mut candidates = vec![
+        let mut candidates = [
             CachedDirCandidate {
                 name: "css-variable-lsp-0.9.0".to_string(),
                 path: PathBuf::from("old"),
