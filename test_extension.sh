@@ -58,6 +58,7 @@ if ! grep -q 'path = \["lmn451", "css-lsp-rust", "\*\*"\]' extension.toml; then
     exit 1
 fi
 echo -e "${GREEN}✓ extension.toml valid${NC}"
+python3 scripts/test_extension_manifest.py
 
 # Test 3: Verify WASM file is valid
 echo -e "\n${YELLOW}Test 3: Checking WASM file...${NC}"
@@ -112,7 +113,7 @@ echo -e "${GREEN}✓ Build successful${NC}"
 
 # Test 8: Verify built WASM matches current
 echo -e "\n${YELLOW}Test 8: Verifying WASM is up-to-date...${NC}"
-BUILT_WASM="target/wasm32-wasip1/release/zed_css_variables.wasm"
+BUILT_WASM="target/wasm32-wasip2/release/zed_css_variables.wasm"
 if [ ! -f "$BUILT_WASM" ]; then
     echo -e "${RED}❌ Built WASM file not found: $BUILT_WASM${NC}"
     exit 1

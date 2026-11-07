@@ -77,7 +77,7 @@
 3. Rebuild WASM:
    ```bash
    ./scripts/build_wasm.sh
-   cp target/wasm32-wasip1/release/zed_css_variables.wasm extension.wasm
+   cp target/wasm32-wasip2/release/zed_css_variables.wasm extension.wasm
    ```
 4. Run tests:
    ```bash

@@ -183,7 +183,9 @@ Assume a variable is defined in `/Users/you/project/src/styles/theme.css` and yo
 
 ### Prerequisites
 
-- Rust with `wasm32-wasip1` target: `rustup target add wasm32-wasip1`
+- Rust with `wasm32-wasip2` target: `rustup target add wasm32-wasip2`
+- Python 3.11 or newer for manifest and artifact checks.
+- Node.js 26 LTS and npm for the clean-install fallback test.
 
 ### Building
 
@@ -195,11 +197,13 @@ build uses the locked dependency graph.
 ./scripts/build_wasm.sh
 
 # Copy WASM to extension root
-cp target/wasm32-wasip1/release/zed_css_variables.wasm extension.wasm
+cp target/wasm32-wasip2/release/zed_css_variables.wasm extension.wasm
 ```
 
 The build helper remaps repository and Cargo registry paths so the tracked WASM
 can be compared consistently across local machines and CI runners.
+The WASI Preview 2 component target matches released Zed's extension builder;
+see [dependency migration notes](DEPENDENCY_MIGRATIONS.md) for upstream guidance.
 
 ### Testing
 

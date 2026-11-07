@@ -15,21 +15,23 @@ jobs:
         os: [ubuntu-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 26
+          package-manager-cache: false
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: 1.97.1
-          targets: wasm32-wasip1
+          targets: wasm32-wasip2
+          components: rustfmt, clippy
 
       - name: Cache Cargo
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/bin/
@@ -38,6 +40,11 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Check formatting and lints
+        run: |
+          cargo fmt -- --check
+          cargo clippy --locked --all-targets -- -D warnings
 
       - name: Run Rust tests
         run: cargo test --locked --lib
