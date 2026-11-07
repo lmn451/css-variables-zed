@@ -2,7 +2,7 @@
 # Simulates a clean installation without Docker
 # This test validates what happens on a fresh system
 
-set -e
+set -euo pipefail
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -12,9 +12,14 @@ NC='\033[0m'
 echo -e "${YELLOW}🧪 Simulating clean installation test...${NC}\n"
 
 # Create temporary test directory
-TEST_DIR="tmp_rovodev_clean_install_test"
-rm -rf "$TEST_DIR"
-mkdir -p "$TEST_DIR"
+mkdir -p .context
+TEST_DIR=$(mktemp -d "$PWD/.context/clean-install.XXXXXX")
+cleanup() {
+    if [ "${KEEP_TEST_DIR:-0}" != "1" ]; then
+        rm -rf "$TEST_DIR"
+    fi
+}
+trap cleanup EXIT
 
 echo -e "${YELLOW}Step 1: Copying extension files to test directory...${NC}"
 cp extension.toml extension.wasm "$TEST_DIR/"
@@ -47,16 +52,21 @@ if command -v npm >/dev/null 2>&1; then
     if [ -L "node_modules/.bin/css-variable-lsp" ] || [ -f "node_modules/.bin/css-variable-lsp" ]; then
         echo -e "${GREEN}✓ npm fallback LSP binary installed successfully${NC}"
     else
-        echo -e "${YELLOW}⚠ npm fallback LSP binary not found (but primary Rust binary should work)${NC}"
+        echo -e "${RED}❌ npm fallback LSP binary not found${NC}"
+        exit 1
     fi
+    # The extension invokes this JavaScript entrypoint directly on every platform.
+    test -f node_modules/css-variable-lsp/out/server.js
+    node --check node_modules/css-variable-lsp/out/server.js
+    node -p '"Verified css-variable-lsp@" + require("./node_modules/css-variable-lsp/package.json").version'
 else
     echo -e "${YELLOW}⚠ npm not available, skipping fallback test${NC}"
 fi
 
-cd ..
+cd ../..
 
 echo -e "\n${YELLOW}Step 5: Cleanup...${NC}"
-if [ "$KEEP_TEST_DIR" != "1" ]; then
+if [ "${KEEP_TEST_DIR:-0}" != "1" ]; then
     rm -rf "$TEST_DIR"
     echo -e "${GREEN}✓ Test directory cleaned up${NC}\n"
 else
@@ -70,5 +80,5 @@ echo -e "${GREEN}========================================${NC}\n"
 echo -e "This test confirms:"
 echo -e "  ✓ Extension files are properly structured"
 echo -e "  ✓ download_file capability is declared"
-echo -e "  ✓ Extension will download the Rust binary on first run in Zed"
+echo -e "  ✓ Download capability is present (live Zed download not exercised)"
 echo -e "  ✓ npm fallback package is available if needed"

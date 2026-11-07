@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Iterator, Tuple
 
 WASM_MAGIC = b"\x00asm\x01\x00\x00\x00"
+COMPONENT_MAGIC = b"\x00asm\x0d\x00\x01\x00"
 
 
 def read_varuint32(data: bytes, offset: int) -> Tuple[int, int]:
@@ -35,7 +36,7 @@ def read_varuint32(data: bytes, offset: int) -> Tuple[int, int]:
 def iter_sections(data: bytes) -> Iterator[Tuple[int, int, int, int]]:
     """Yield section start, payload start, payload end, and section id."""
 
-    if not data.startswith(WASM_MAGIC):
+    if data[:8] not in (WASM_MAGIC, COMPONENT_MAGIC):
         raise ValueError("not a WebAssembly binary")
 
     offset = len(WASM_MAGIC)
@@ -65,17 +66,42 @@ def custom_section_name(data: bytes, payload_start: int, payload_end: int) -> by
 def canonicalize_wasm(data: bytes) -> bytes:
     """Remove only the platform-sensitive ``name`` custom section.
 
-    All executable, data, component, and other custom sections remain byte-for-byte
-    significant. The ``name`` section contains compiler/debug names and can include
-    absolute source paths that differ between macOS and Linux builds.
+    The same rule applies inside a component's nested core modules and components.
+    All executable, data, and other custom sections remain significant. The
+    ``name`` section contains compiler/debug names and can include absolute source
+    paths that differ between macOS and Linux builds.
     """
 
-    canonical = bytearray(WASM_MAGIC)
+    canonical = bytearray(data[:8])
+    is_component = data[:8] == COMPONENT_MAGIC
     for section_start, payload_start, payload_end, section_id in iter_sections(data):
         if section_id == 0 and custom_section_name(data, payload_start, payload_end) == b"name":
             continue
+        if is_component and section_id in (1, 4):
+            # Component section 1 embeds a core module; section 4 embeds a component.
+            nested = data[payload_start:payload_end]
+            expected_magic = WASM_MAGIC if section_id == 1 else COMPONENT_MAGIC
+            if nested[:8] != expected_magic:
+                raise ValueError("invalid nested WebAssembly header")
+            payload = canonicalize_wasm(nested)
+            if payload != nested:
+                canonical.append(section_id)
+                canonical.extend(encode_varuint32(len(payload)))
+                canonical.extend(payload)
+                continue
         canonical.extend(data[section_start:payload_end])
     return bytes(canonical)
+
+
+def encode_varuint32(value: int) -> bytes:
+    """Encode a section length after removing nested name metadata."""
+
+    encoded = bytearray()
+    while value >= 0x80:
+        encoded.append((value & 0x7F) | 0x80)
+        value >>= 7
+    encoded.append(value)
+    return bytes(encoded)
 
 
 def sha256(data: bytes) -> str:

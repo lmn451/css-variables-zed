@@ -11,6 +11,20 @@ kind = "download_file"
 host = "github.com"
 path = ["lmn451", "css-lsp-rust", "**"]
 
+[[capabilities]]
+kind = "npm:install"
+package = "css-variable-lsp"
+
+[[capabilities]]
+kind = "process:exec"
+command = "*"
+args = ["--version"]
+
+[[capabilities]]
+kind = "process:exec"
+command = "*"
+args = ["-V"]
+
 [language_servers.css-variables]
 name = "CSS Variables Language Server"
 
@@ -41,6 +55,6 @@ JSX = "javascriptreact"
 TypeScript = "typescript"
 TSX = "typescriptreact"
 Svelte = "svelte"
-Vue = "vue"
+"Vue.js" = "vue"
 Astro = "astro"
 PostCSS = "postcss"

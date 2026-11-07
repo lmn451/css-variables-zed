@@ -9,4 +9,4 @@ cd "$REPO_ROOT"
 CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
 export RUSTFLAGS="${RUSTFLAGS:-} --remap-path-prefix=${REPO_ROOT}=/workspace --remap-path-prefix=${CARGO_HOME}=/cargo"
 
-cargo build --locked --release --target wasm32-wasip1
+cargo build --locked --release --target wasm32-wasip2

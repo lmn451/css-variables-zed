@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Remove unused direct Rust dependencies and refresh the compatible lockfile, including fixes in transitive anyhow and futures.
+- Build WASI Preview 2 components to match released Zed, update CI actions and Node, and declare npm/PATH-check capabilities.
+- Map the `Vue.js` language name to the `vue` LSP language ID.
 - Add opt-in `eagerJs` configuration to index CSS-in-JS in unopened JavaScript/TypeScript files.
 
 ## 0.1.1
