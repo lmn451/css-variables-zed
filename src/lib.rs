@@ -219,6 +219,20 @@ impl zed::Extension for CssVariablesExtension {
         })
     }
 
+    fn language_server_initialization_options(
+        &mut self,
+        _language_server_id: &zed::LanguageServerId,
+        worktree: &zed::Worktree,
+    ) -> zed::Result<Option<Value>> {
+        let settings = LspSettings::for_worktree("css-variables", worktree)
+            .ok()
+            .and_then(|lsp| lsp.settings);
+        Ok(settings.and_then(|settings| {
+            let overrides = settings.pointer("/cssVariables/diagnosticSeverities")?;
+            Some(zed::serde_json::json!({ "cssVariables": { "diagnosticSeverities": overrides } }))
+        }))
+    }
+
     fn language_server_workspace_configuration(
         &mut self,
         _language_server_id: &zed::LanguageServerId,
@@ -265,6 +279,7 @@ fn build_workspace_settings(user_settings: Option<Value>) -> Value {
                 "**/tmp/**",
             ],
             "undefinedVarFallback": "warning",
+            "diagnosticSeverities": {},
             "eagerJs": false,
         }
     });
@@ -855,6 +870,28 @@ zed::register_extension!(CssVariablesExtension);
 mod tests {
     use super::*;
     use zed::serde_json::json;
+
+    #[test]
+    fn removing_last_diagnostic_override_sends_empty_map() {
+        let overrides = json!({"css-variable-lsp.literal-color-replaceable": "off"});
+        let mut settings =
+            json!({"cssVariables": {"diagnosticSeverities": overrides, "eagerJs": true}});
+        let key = "/cssVariables/diagnosticSeverities";
+        assert_eq!(
+            build_workspace_settings(Some(settings.clone())).pointer(key),
+            Some(&overrides)
+        );
+        settings["cssVariables"]
+            .as_object_mut()
+            .unwrap()
+            .remove("diagnosticSeverities");
+        for remaining in [Some(settings), None] {
+            assert_eq!(
+                build_workspace_settings(remaining).pointer(key),
+                Some(&json!({}))
+            );
+        }
+    }
 
     #[test]
     fn merges_nested_css_variables_settings() {

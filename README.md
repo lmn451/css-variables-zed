@@ -40,7 +40,8 @@ the Settings JSON (Cmd+, then "Open Settings JSON") or a workspace
           "lookupFiles": ["**/*.css", "**/*.scss", "**/*.vue"],
           "blacklistFolders": ["**/dist/**", "**/node_modules/**"],
           "undefinedVarFallback": "info",
-          "eagerJs": true
+          "eagerJs": true,
+          "diagnosticSeverities": {}
         }
       }
     }
@@ -54,6 +55,14 @@ Provided lists replace the defaults (include any defaults you still want).
 undefined variable; supported values are `warning` (default), `info`, and `off`.
 Set `eagerJs` to `true` to pass `--eager-js` and index CSS-in-JS from unopened
 JavaScript/TypeScript files during workspace scanning.
+
+`diagnosticSeverities` sets the severity of individual CSS Variables diagnostics.
+Use the full diagnostic code shown by the editor and one of `error`, `warning`,
+`info`, `hint`, or `off`. The default is an empty object: no severities change.
+To hide only the literal-color suggestion, set `css-variable-lsp.literal-color-replaceable` to `off` in this object.
+Other messages and CSS variable completion keep their usual behavior. Remove
+an entry to restore the default. This requires a server with support for
+`diagnosticSeverities`; older servers ignore it.
 
 Binary resolution order (first match wins):
 1) `lsp.css-variables.binary.path` (can point to a local dev build)
