@@ -219,6 +219,20 @@ impl zed::Extension for CssVariablesExtension {
         })
     }
 
+    fn language_server_initialization_options(
+        &mut self,
+        _language_server_id: &zed::LanguageServerId,
+        worktree: &zed::Worktree,
+    ) -> zed::Result<Option<Value>> {
+        let settings = LspSettings::for_worktree("css-variables", worktree)
+            .ok()
+            .and_then(|lsp| lsp.settings);
+        Ok(settings.and_then(|settings| {
+            let overrides = settings.pointer("/cssVariables/diagnosticSeverities")?;
+            Some(zed::serde_json::json!({ "cssVariables": { "diagnosticSeverities": overrides } }))
+        }))
+    }
+
     fn language_server_workspace_configuration(
         &mut self,
         _language_server_id: &zed::LanguageServerId,
